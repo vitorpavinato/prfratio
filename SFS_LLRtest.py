@@ -17,17 +17,14 @@ from scipy.optimize import minimize,minimize_scalar
 from scipy.stats import chi2
 import  SFS_functions
 
-checkPRFnull = True
+checkPRFnull = False #True
 checkRationull = True
 
 np.random.seed(1)
 ntrials = 100
 n=40
 g = 0.0 
-theta = 500
-thetaN = 500
-thetaS = 500
-thetaNequalthetaS = thetaN==thetaS
+theta = 25#500
 
 
 if checkPRFnull: # regular PRF LLR stuff,  no use of ratio 
@@ -59,8 +56,8 @@ if checkPRFnull: # regular PRF LLR stuff,  no use of ratio
 
 ntrials = 100
 g = 0.0 
-thetaN = 500
-thetaS = 500
+thetaN = 25 #500
+thetaS = 5 #500
 thetaNequalthetaS = thetaN==thetaS
 if thetaNequalthetaS:
     theta = thetaN
