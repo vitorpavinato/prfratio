@@ -1,13 +1,9 @@
 
 """
-runs a power analysis for both the basic PRF model and the Ratio model.  
-For a range of true values of the selection coefficient g
-and array contains a series of values from the chi-squared distribution with 1 degree of freedom
-the script estimates the proportion of time that a True Positive occurs. 
+runs an analysis of estimator bias and variance .  
+For a range of true values of the selection coefficient g generate boxplots of estimates 
 
 User must set theta 
-
-takes a couple hours to run 
 
 """
 import numpy as np
