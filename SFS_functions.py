@@ -98,7 +98,7 @@ def Li_ratio(p,i,n,z,nog):
         there can be one or two theta values, if two, the first is thetaN and the second is thetaS
     """
     try:
-        if z==math.inf:
+        if z==math.inf or z==0.0:
             return 0.0
         if nog:
             if isinstance(p,float):
