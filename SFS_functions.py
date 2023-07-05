@@ -151,7 +151,7 @@ def negL_ratio(p,maxi,n,zvals,nog):
         returns the negative of the log of the likelihood for a list of ratios of selected over neutral counts 
         calls Li_ratio()
     """
-    assert zvals[0]==0
+    assert zvals[0]==0 or zvals[0] == math.inf
     sum = 0
     tempa = []
     for i in range(1,len(zvals)):

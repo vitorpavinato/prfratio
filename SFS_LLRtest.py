@@ -37,7 +37,7 @@ if checkPRFnull: # regular PRF LLR stuff,  no use of ratio
         gstart = -1.0
         maxi = n//2 - 1 # not used
         thetagresult = minimize(SFS_functions.negLfw,np.array([thetastart,gstart]),args=(maxi,n,sfsfolded),method="Powell",bounds=[(thetastart/10,thetastart*10),(10*gstart,-10*gstart)])
-        ratioresult =  minimize(SFS_functions.negLfw,np.array([thetastart,gstart]),args=(maxi,n,sfsfolded),method="Powell",bounds=[(thetastart/10,thetastart*10),(10*gstart,-10*gstart)])
+        # ratioresult =  minimize(SFS_functions.negLfw,np.array([thetastart,gstart]),args=(maxi,n,sfsfolded),method="Powell",bounds=[(thetastart/10,thetastart*10),(10*gstart,-10*gstart)])
         # check straight-up use of watterson's estimator
         # wtheta,wL = SFS_functions.watterson_L(n,sfs,folded=False)
         # wthetafolded,wLfolded = SFS_functions.watterson_L(n,sfsfolded,folded=True)
