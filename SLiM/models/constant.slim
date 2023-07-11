@@ -1,0 +1,103 @@
+// usage: 
+// slim -s <SEED> -d simu=<sim number> -d MU=<MU RATE> -d R=<R RATE> -d N=<POPSIZE> \
+//      -d L=<CHR LENGTH> -d Ns=<NS>
+//      -d intronL=<INTRON LENGTH> -d exonL=<EXON LENGTH> \
+//      -d n=<SAMPLE SIZE> -d basename=<NAME> -d o=<OUTPUT DIR>  
+
+// set up a simple neutral simulation
+initialize() {
+	
+	// UPLOAD FUNCTIONS - THIS DOES NOT CHANGE
+	source("/Users/tur92196/WorkDir/prfratio/SLiM/src/slim_fun.eidos");
+	
+	// FOR DEBUGGING ONLY
+	//defineGlobal("seed", 123456);
+	//defineGlobal("simu", 1);
+	//defineGlobal("MU", (1e-6/4));
+	//defineGlobal("R", (1e-6/4));
+	//defineGlobal("N", 1000);
+	//defineGlobal("L", 10000);
+	//defineGlobal("Ns", -0.02);
+	defineGlobal("intronL", 810); // at this point, it doesn't matter the size 
+	defineGlobal("exonL", 324);
+	//defineGlobal("n", 40);
+	//defineGlobal("outDir", "/Users/tur92196/WorkDir/prfratio/SLiM/results/prfratio/constant/gn002"); // change this to a working dir when testing ouput
+	//defineGlobal("outDir", "results/prfratio/constant/gn002"); // change this to a working dir when testing ouput	
+	//defineGlobal("model", "constant");
+	
+	// Arguments are parsed from command line
+	//setSeed(seed);
+	initializeMutationRate(MU);
+	initializeMutationType("m1", 0.5, "f", 0.0);     // neutral mutations in introns
+	initializeMutationType("m2", 0.5, "f", Ns/N);    // non-neutral mutations in exons; Ns/N to get s from Ns
+	m1.convertToSubstitution = F;
+	m2.convertToSubstitution = F;
+	
+	initializeGenomicElementType("g1", m1, 1);
+	initializeGenomicElementType("g2", m2, 1);
+	
+	//	Generates intron/exons pairs programatically
+	base=0;
+	while (base < L) {    
+	    
+       if ((L-1) - base < (intronL + exonL)){
+           
+           // Make one intron to fill the remaning gap  
+		     initializeGenomicElement(g1, base, (base + ((L-1) - base)));
+       
+       }	else {
+           // Make one intron & exon pair   
+		     initializeGenomicElement(g1, base, (base + intronL - 1));
+		 
+		     //exon_length = exonL;
+		     initializeGenomicElement(g2, (base + intronL), (base + intronL + exonL - 1));
+       
+       }    
+	    
+	    // Update base length
+       base = base + intronL + exonL;	
+	}// end of while
+	
+	
+	// single recombination rate	
+	initializeRecombinationRate(R);
+
+}
+
+// Create a population of size N individuals
+1 late() {
+	sim.addSubpop("p0", N);
+	
+	// schedule SAMPLING BLOCK
+	community.rescheduleScriptBlock(s0, start=10*N, end=10*N);
+
+}
+
+// SAMPLING BLOCK
+s0 999999 late(){
+	m1fsfs = fsfs(p0, m1, n, F);
+	m2fsfs = fsfs(p0, m2, n, F);
+	print(m1fsfs);
+	print("\n");
+	print(m2fsfs);
+	
+	// Save FSFSs to a file:
+	writeSFS(m1fsfs, paste0(model + "_" + Ns + "_" + simu + "_sfs_neutral"), outDir);
+	writeSFS(m2fsfs, paste0(model + "_" + Ns + "_" + simu + "_sfs_selected"), outDir);
+	
+	// Number of polymorphic sites in the population
+	//pop_m1 = getNumberSNPsFromPop(p0, m1);
+	//pop_m2 = getNumberSNPsFromPop(p0, m2);
+	
+	// Number of polymorphic sites in the sample of n=40 individuals
+	//sam_m1 = getNumberSNPsFromSample(p0, m1, n);
+	//sam_m2 = getNumberSNPsFromSample(p0, m2, n);
+	
+	//n_snps = paste(c(pop_m1, pop_m2, sam_m1, sam_m2));
+	//print(n_snps);   
+	//writeFile(filePath=paste0(outDir + "/" + model + "_" + "n_snps_" + Ns + ".txt"), contents=n_snps, append=T);
+	
+	sim.simulationFinished();
+}
+
+

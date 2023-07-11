@@ -1,0 +1,68 @@
+// Functions definitions
+function (*)getNumberSNPsFromPop(o<Subpopulation>$ subpop, o<MutationType>$ mutType)
+{
+	// Number of polymorphic sites from the population
+	muts = sim.mutationsOfType(mutType);
+	pf = subpop.individuals.genomes.mutationFrequenciesInGenomes(muts);
+	nsnps = size(pf[pf > 0 & pf < 1]);
+	return nsnps;
+}
+
+function (*)getNumberSNPsFromSample(o<Subpopulation>$ subpop, o<MutationType>$ mutType, i$ sampleSize)
+{
+	// Number of polymorphic sites in the sample of n individuals
+	muts = sim.mutationsOfType(mutType);
+	si = sample(subpop.individuals, size = sampleSize, replace = F);
+	sf = si.genomes.mutationFrequenciesInGenomes(muts);
+	nsnps = size(sf[sf > 0 & sf < 1]);
+	return nsnps;
+}
+
+function (*)fsfs(o<Subpopulation>$ subpop, o<MutationType>$ mutType, i$ sampleSize, [logical$ outInvariants = F])
+{
+	// sample individuals from the population
+	Chr = 2*sampleSize;
+	muts = sim.mutationsOfType(mutType);
+	si = sample(subpop.individuals, size = sampleSize, replace = F);
+	vdac = si.genomes.mutationCountsInGenomes(muts);
+	
+	// Calculate the FSFS
+	fsfs = rep(0, sampleSize+1);
+	for (i in seqAlong(vdac))
+	{
+	    // get the derived and ancestral allele counts
+       dac = vdac[i];	
+       aac = Chr - dac;	
+	
+	    // set the minimum for the folded-sfs
+	    mac = min(c(aac, dac));
+	
+	    // fill the vector with the counts for each bin
+	    fsfs[mac] = fsfs[mac] + 1;
+	}//end of for loop
+	
+	// if output invariants, return the full folded-sfs, 
+	// if not, remove the invariant bin
+	if (outInvariants)
+	   return fsfs;
+	else
+	   return fsfs[1:(size(fsfs)-1)];
+}
+
+function (void)writeSFS(i sfs, s$ basename, s$ path)
+{
+    writeFile(filePath=paste0(path + "/" + basename + ".txt"), contents = paste(sfs), append=T);
+} 
+
+// Maybe remove
+//function (void)writeFSFS(i fsfs, s$ mutName, s$ path)
+//{
+//	// Output the FSFS to a file      
+//	for (i in seqAlong(fsfs))
+//	{
+//		bin = paste(i+1 + "\t" + fsfs[i]);
+//		writeFile(filePath=paste0(path + "/" + mutName + "_fsfs.txt"), contents=bin , append=T);
+//	}// end for loop
+//
+//
+//}
