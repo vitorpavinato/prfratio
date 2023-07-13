@@ -21,9 +21,13 @@ initialize() {
 	defineGlobal("intronL", 810); // at this point, it doesn't matter the size 
 	defineGlobal("exonL", 324);
 	//defineGlobal("n", 40);
-	//defineGlobal("outDir", "/Users/tur92196/WorkDir/prfratio/SLiM/results/prfratio/constant/gn002"); // change this to a working dir when testing ouput
-	//defineGlobal("outDir", "results/prfratio/constant/gn002"); // change this to a working dir when testing ouput	
+	//defineGlobal("outDir", "/Users/tur92196/WorkDir/prfratio/SLiM/results/prfratio/constant/-0.02"); // change this to a working dir when testing ouput
+	//defineGlobal("outDir", "results/prfratio/constant/-0.02"); // change this to a working dir when testing ouput	
 	//defineGlobal("model", "constant");
+	
+	// FOR DEBUGGING
+	// Track pedigree
+   //initializeSLiMOptions(keepPedigrees=T);
 	
 	// Arguments are parsed from command line
 	//setSeed(seed);
@@ -67,6 +71,18 @@ initialize() {
 // Create a population of size N individuals
 1 late() {
 	sim.addSubpop("p0", N);
+	
+	// DEBUGGING ONLY
+	//p0.setValue("previous_N", p0.individualCount);
+	//
+	// Create a log file to track changes in population size for debugging only
+   //log = community.createLogFile(paste0(outDir + "/" + model + "_" + Ns + "_" + simu + "_Ne_log.csv"), logInterval=1);
+	//log.addCycle();
+	//log.addCustomColumn("N(t-1)", "p0.getValue('previous_N');");
+	//log.addCustomColumn("N(t)", "p0.individualCount;");
+	//log.addCustomColumn("Ne_heterozygosity", "estimateNe_Heterozygosity(p0, MU);");
+	//log.addCustomColumn("Ne_inbreeding", "estimateNe_Inbreeding(p0);");
+	//log.addCustomColumn("Ne_inbreeding2", "trackSel_NeInbreeding(p0);");
 	
 	// schedule SAMPLING BLOCK
 	community.rescheduleScriptBlock(s0, start=10*N, end=10*N);

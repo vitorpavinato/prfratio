@@ -11,27 +11,27 @@ initialize() {
 	source("/Users/tur92196/WorkDir/prfratio/SLiM/src/slim_fun.eidos");
 	
 	// FOR DEBUGGING ONLY
-	//defineGlobal("seed", 123456);
-	//defineGlobal("simu", 1);
-	//defineGlobal("MU", (1e-6/4));
-	//defineGlobal("R", (1e-6/4));
-	//defineGlobal("N", 1000);
-	//defineGlobal("L", 10000);
-	//defineGlobal("Ns", -0.02);
+	defineGlobal("seed", 123456);
+	defineGlobal("simu", 1);
+	defineGlobal("MU", (1e-6/4));
+	defineGlobal("R", (1e-6/4));
+	defineGlobal("N", 100);
+	defineGlobal("L", 10000);
+	defineGlobal("Ns", -0.02);
 	defineGlobal("intronL", 810); // at this point, it doesn't matter the size 
 	defineGlobal("exonL", 324);
-	//defineGlobal("n", 40);
-	//defineGlobal("outDir", "/Users/tur92196/WorkDir/prfratio/SLiM/results/prfratio/ibottleneck/-0.02"); // change this to a working dir when testing ouput
-	//defineGlobal("outDir", "results/prfratio/constant/gn002"); // change this to a working dir when testing ouput	
-	//defineGlobal("model", "iexpansion");
+	defineGlobal("n", 4);
+	defineGlobal("outDir", "/Users/tur92196/WorkDir/prfratio/SLiM/results/prfratio/iexpansion/-0.02"); // change this to a working dir when testing ouput
+	//defineGlobal("outDir", "results/prfratio/iexpansion/-0.02"); // change this to a working dir when testing ouput	
+	defineGlobal("model", "iexpansion");
 	defineGlobal("Nx", asInteger(N*5));
 	
-	// For debbugging only	
-	pop_sizes = paste(c(N,Nx));
-	writeFile(filePath=paste0(outDir + "/" + model + "_" + Ns + "_" + simu + "_popSizes.txt"), contents=pop_sizes, append=T);
+	// FOR DEBUGGING
+	// Track pedigree
+   initializeSLiMOptions(keepPedigrees=T);
 	
 	// Arguments are parsed from command line
-	//setSeed(seed);
+	setSeed(seed);
 	initializeMutationRate(MU);
 	initializeMutationType("m1", 0.5, "f", 0.0);     // neutral mutations in introns
 	initializeMutationType("m2", 0.5, "f", Ns/N);    // non-neutral mutations in exons; Ns/N to get s from Ns
@@ -76,8 +76,20 @@ initialize() {
 1 late() {
 	sim.addSubpop("p0", N);
 	
+	// DEBUGGING ONLY	
+	p0.setValue("previous_N", p0.individualCount);
+	
+	// Create a log file to track changes in population size for debugging only
+   log = community.createLogFile(paste0(outDir + "/" + model + "_" + Ns + "_" + simu + "_Ne_log.csv"), logInterval=1);
+	log.addCycle();
+	log.addCustomColumn("N(t-1)", "p0.getValue('previous_N');");
+	log.addCustomColumn("N(t)", "p0.individualCount;");
+	log.addCustomColumn("Ne_heterozygosity", "estimateNe_Heterozygosity(p0, MU);");
+	log.addCustomColumn("Ne_inbreeding", "estimateNe_Inbreeding(p0);");
+	log.addCustomColumn("Ne_inbreeding2", "trackSel_NeInbreeding(p0);");
+	
 	// schedule SAMPLING BLOCK
-	community.rescheduleScriptBlock(s0, start=10*N, end=10*N);
+	community.rescheduleScriptBlock(s0, start=10*N+1, end=10*N+1);
 	community.rescheduleScriptBlock(s1, start=10*N+2, end=10*N+2);
 
 }
@@ -85,8 +97,8 @@ initialize() {
 // SAMPLING BLOCK
 s0 999999 early(){
     
-    // Instantaneous population size change - Bottleneck
-    // Bottleneck intensity N*5
+    // Instantaneous population size change - Expansion
+    // Expansion intensity N*5
     p0.setSubpopulationSize(Nx);
 }
 
@@ -98,8 +110,8 @@ s1 999999 late(){
 	 print(m2fsfs);    
     
     // Save FSFSs to a file:
-	 writeSFS(m1fsfs, paste0(model + "_" + Ns + "_" + simu + "_sfs_neutral"), outDir);
-	 writeSFS(m2fsfs, paste0(model + "_" + Ns + "_" + simu + "_sfs_selected"), outDir);    
+	 //writeSFS(m1fsfs, paste0(model + "_" + Ns + "_" + simu + "_sfs_neutral"), outDir);
+	 //writeSFS(m2fsfs, paste0(model + "_" + Ns + "_" + simu + "_sfs_selected"), outDir);    
 	 
 	 // Number of polymorphic sites in the population
 	 //pop_m1 = getNumberSNPsFromPop(p0, m1);
