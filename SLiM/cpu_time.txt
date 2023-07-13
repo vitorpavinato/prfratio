@@ -1,0 +1,2 @@
+cat ns.list  0.00s user 0.00s system 59% cpu 0.006 total
+parallel -j 8   162427.87s user 5629.66s system 439% cpu 10:37:41.31 total
