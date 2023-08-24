@@ -71,6 +71,7 @@ def run(args):
     if densityof2Ns == 'lognormal':  
         # gvals = [(0.3, 0.5),(0.7, 0.8),(1.0, 1.0),(2.0, 1.4),(5.0, 2.2)]
         gvals = [[0.3, 0.5], [1, 0.7], [2.0, 1.0], [2.2, 1.4], [3, 1.2]]
+        # gvals = [gvals[-1]]
         ln1results = []
         ln2results = []
     elif densityof2Ns == 'gamma':
@@ -292,7 +293,7 @@ def run(args):
                         term1start = 1.0
                         term2start = 1.0
                         if args.use_watterson_thetaN:
-                            thetaN = sum(nsfs)/sum([1/i for i in range(1,n)])
+                            thetaNest = sum(nsfs)/sum([1/i for i in range(1,n)]) # this should work whether or not the sfs is folded 
                             nlfunc = SFS_functions.NegL_SFSRATIO_Theta_Lognormal_given_thetaN
                             # countratio = sum(nsfs)/sum(ssfs)
                             # nlfunc = SFS_functions.NegL_SFSRATIO_Theta_Gamma_EX
@@ -311,7 +312,7 @@ def run(args):
                         term1start = 2.0
                         term2start = 2.0
                         if args.use_watterson_thetaN:
-                            thetaN = sum(nsfs)/sum([1/i for i in range(1,n)])
+                            thetaNest = sum(nsfs)/sum([1/i for i in range(1,n)])  # this should work whether or not the sfs is folded 
                             nlfunc = SFS_functions.NegL_SFSRATIO_Theta_Gamma_given_thetaN
                             # countratio = sum(nsfs)/sum(ssfs)
                             # nlfunc = SFS_functions.NegL_SFSRATIO_Theta_Gamma_EX
@@ -327,7 +328,7 @@ def run(args):
                     if args.use_watterson_thetaN:
                         result = minimize(nlfunc,np.array(startarray),args=(n,thetaN,dofolded,ratios),method=optimizemethod,bounds=boundsarray) 
                         thetaSresults[gi],ln1results[gi],ln2results[gi] = [lst + [val] for lst, val in zip([thetaSresults[gi],ln1results[gi],ln2results[gi]], result.x)]
-                        thetaNresults[gi].append(thetaN)
+                        thetaNresults[gi].append(thetaNest)
                         # result = minimize(nlfunc,np.array(startarray),args=(n,countratio,dofolded,ratios),method=optimizemethod,bounds=boundsarray)       
                         # thetaSresults[gi],ln1results[gi],ln2results[gi] = [lst + [val] for lst, val in zip([thetaSresults[gi],ln1results[gi],ln2results[gi]], result.x)]
                         # thetaNresults[gi].append(SFS_functions.estimate_thetaN(result.x,n,countratio,dofolded))                        
