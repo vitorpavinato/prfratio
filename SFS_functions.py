@@ -188,7 +188,7 @@ def NegL_SFS_Theta_Ns(p,n,dofolded,counts):
         sum += L_SFS_Theta_Ns_bin_i(p,i,n,dofolded,counts[i])
     return -sum 
 
-## EXPERIMENTAL attempt at using a distribution of g  - did not really work, not in use as of 8/10/23
+## EXPERIMENTAL attempt at using a discrete distribution of g  - did not really work, not in use as of 8/10/23
 # def NegL_SFS_Theta_Nsdistribution(p,n,dofolded,counts):
 #     """
 #         for fisher wright poisson random field model 
@@ -570,10 +570,10 @@ def estimate_thetaN(p,n,countratio,dofolded):
     thetaN = (sumsint/uy)*countratio*thetaS
     return thetaN    
 
-#experimental, uses thetaN estiamted directly from snp count 
+
 def NegL_SFSRATIO_Theta_Lognormal_given_thetaN(p,n,thetaN,dofolded,zvals): 
     """
-        countratio is the ratio of total neutral counts divided by total selected counts 
+    uses thetaN estimated directly from snp count 
     """
 
     def L_SFSRATIO_Theta_Lognormal_bin_i(p,i,n,dofolded,z): 
@@ -602,10 +602,10 @@ def NegL_SFSRATIO_Theta_Lognormal_given_thetaN(p,n,thetaN,dofolded,zvals):
         sum += temp
     return -sum   
 
-#experimental, uses thetaN estiamted directly from snp count 
+
 def NegL_SFSRATIO_Theta_Gamma_given_thetaN(p,n,thetaN,dofolded,zvals): 
     """
-        countratio is the ratio of total neutral counts divided by total selected counts 
+        uses thetaN estiamted directly from snp count 
     """
 
     def L_SFSRATIO_Theta_Gamma_bin_i(p,i,n,dofolded,z): 
@@ -633,6 +633,37 @@ def NegL_SFSRATIO_Theta_Gamma_given_thetaN(p,n,thetaN,dofolded,zvals):
         temp =  L_SFSRATIO_Theta_Gamma_bin_i(p,i,n,dofolded,zvals[i])
         sum += temp
     return -sum   
+
+def NegL_SFSRATIO_Theta_given_thetaN(p,n,thetaN,dofolded,zvals): 
+    """
+        uses thetaN estiamted directly from snp count 
+    """
+
+    def L_SFSRATIO_Theta_Gamma_bin_i(p,i,n,dofolded,z): 
+        try:
+            if z==math.inf or z==0.0:
+                return 0.0
+            thetaN = p[0]
+            thetaS = p[1]
+            g = (p[2],p[3])
+            density_values = np.array([prfdensityfunction(x,n,i,g[0],g[1],"gamma",dofolded) for x in g_xvals])
+            sint = float(np.trapz(density_values,g_xvals))
+            ux=thetaS*sint                               
+            uy = thetaN*n/(i*(n-i)) if dofolded else thetaN/i     
+            alpha = ux/uy
+            sigmay = math.sqrt(uy)
+            beta = 1/sigmay
+            return logprobratio(alpha,beta,z)             
+        except:
+            return -math.inf 
+    assert zvals[0]==0 or zvals[0] == math.inf
+    p = list(p)
+    p.insert(0,thetaN)
+    sum = 0
+    for i in range(1,len(zvals)):
+        temp =  L_SFSRATIO_Theta_Gamma_bin_i(p,i,n,dofolded,zvals[i])
+        sum += temp
+    return -sum       
 
 #experimental,  calls estimate_thetaN(), has not been useful as of 8/10/23
 def NegL_SFSRATIO_Theta_Gamma_EX(p,n,countratio,dofolded,zvals): 
