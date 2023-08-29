@@ -21,13 +21,12 @@ initialize() {
 	defineGlobal("intronL", 810); // at this point, it doesn't matter the size 
 	defineGlobal("exonL", 324);
 	//defineGlobal("n", 40);
-	//defineGlobal("outDir", "/Users/tur92196/WorkDir/prfratio/SLiM/results/prfratio/threeepocs/-0.02"); // change this to a working dir when testing ouput
-	//defineGlobal("outDir", "results/prfratio/threeepocs/-0.02"); // change this to a working dir when testing ouput	
-	//defineGlobal("model", "threeepocs");
-	defineGlobal("Nb", asInteger(N/5));
-	defineGlobal("Nc", asInteger(Nb*4));
+	//defineGlobal("outDir", "/Users/tur92196/WorkDir/prfratio/SLiM/results/prfratio/ibottleneckfixeds/-0.02"); // change this to a working dir when testing ouput
+	//defineGlobal("outDir", "results/prfratio/ibottleneckfixeds/-0.02"); // change this to a working dir when testing ouput	
+	//defineGlobal("model", "ibottleneckfixeds");
+	defineGlobal("Nb", asInteger(N/10));
 	
-   // FOR DEBUGGING
+	// FOR DEBUGGING
 	// Track pedigree
    //initializeSLiMOptions(keepPedigrees=T);	
    
@@ -39,14 +38,15 @@ initialize() {
 	m1.convertToSubstitution = F;
 	m2.convertToSubstitution = F;
 	
+	// Initialize genome elements
 	initializeGenomicElementType("g1", m1, 1);
 	initializeGenomicElementType("g2", m2, 1);
 	
    // Test if the sample size n is higher than the population size
-   if (n > Nc)
-       stop("Sample size n can't be larger than the population size Nc!!!");	
-	else if (n > N)
-	    stop("Sample size n can't be larger than the ancestral population size N!!!");
+   if (n > N)
+       stop("Sample size n can't be larger than the population size N!!!");	
+	else if (n > Nb)
+	    stop("Sample size n can't be larger than the population size after the bottleneck Nb!!!");
 	
 	//	Generates intron/exons pairs programatically
 	base=0;
@@ -73,54 +73,53 @@ initialize() {
 	
 	// single recombination rate	
 	initializeRecombinationRate(R);
+	
 }
 
 // Create a population of size N individuals
 1 late() {
 	sim.addSubpop("p0", N);
 	
-	// DEBUGGING ONLY	
+   // DEBUGGING ONLY	
 	//p0.setValue("previous_N", p0.individualCount);
-	
+	//
 	// Create a log file to track changes in population size for debugging only
    //log = community.createLogFile(paste0(outDir + "/" + model + "_" + Ns + "_" + simu + "_Ne_log.csv"), logInterval=1);
 	//log.addCycle();
 	//log.addCustomColumn("N(t-1)", "p0.getValue('previous_N');");
-	//log.addCustomColumn("N(t)", "p0.individualCount;");
+   //log.addCustomColumn("N(t)", "p0.individualCount;");
 	//log.addCustomColumn("Ne_heterozygosity", "estimateNe_Heterozygosity(p0, MU);");
 	//log.addCustomColumn("Ne_inbreeding", "estimateNe_Inbreeding(p0);");
 	//log.addCustomColumn("Ne_inbreeding2", "trackSel_NeInbreeding(p0);");
 	
 	// schedule SAMPLING BLOCK
-	community.rescheduleScriptBlock(s0, start=10*N+1, end=10*N+1);
-	community.rescheduleScriptBlock(s1, start=10*N+2001, end=10*N+2001);
-	community.rescheduleScriptBlock(s2, start=10*N+5000, end=10*N+5000);
+	//community.rescheduleScriptBlock(s0, start=10*N+1, end=10*N+1);
+	//community.rescheduleScriptBlock(s1, start=10*N+Nb, end=10*N+Nb);
 
 }
 
-// DEMOGRAPHY BLOCK 1
-s0 999999 early(){
-    
+// DEMOGRAPHY BLOCK
+//s0 999999 early(){
+10000  early(){    
     // Instantaneous population size change - Bottleneck
-    // Bottleneck intensity N/5
+    // Bottleneck intensity N/10
     p0.setSubpopulationSize(Nb);
-}
-
-// DEMOGRAPHY BLOCK 2
-s1 999999 early(){
     
-    // Instantaneous population size change - Bottleneck
-    // Bottleneck intensity N/5
-    p0.setSubpopulationSize(Nc);
 }
+//10001:10100 early(){
+//    // THIS FORCES ALL NEW MUTATIONS TO HAVE THE s = Ns/Nb
+//    sel_muts = sim.mutationsOfType(m2);
+//    sel_muts.setSelectionCoeff(Ns/Nb);
+//}
 
 // SAMPLING BLOCK
-s2 999999 late(){
+//s1 999999 late(){
+10100 early(){
     m1fsfs = fsfs(p0, m1, n, F);
 	 m2fsfs = fsfs(p0, m2, n, F);
 	 print(m1fsfs);
 	 print("\n");
-	 print(m2fsfs);    
+	 print(m2fsfs);
     
     // Save FSFSs to a file:
 	 writeSFS(m1fsfs, paste0(model + "_" + Ns + "_" + simu + "_sfs_neutral"), outDir);
@@ -140,5 +139,3 @@ s2 999999 late(){
 	
 	 sim.simulationFinished();
 }
-
-

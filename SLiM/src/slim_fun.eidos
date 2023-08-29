@@ -54,6 +54,7 @@ function (void)writeSFS(i sfs, s$ basename, s$ path)
     writeFile(filePath=paste0(path + "/" + basename + ".txt"), contents = paste(sfs), append=T);
 } 
 
+
 // Maybe remove
 //function (void)writeFSFS(i fsfs, s$ mutName, s$ path)
 //{

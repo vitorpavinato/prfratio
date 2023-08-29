@@ -11,7 +11,7 @@ initialize() {
 	source("/Users/tur92196/WorkDir/prfratio/SLiM/src/slim_fun.eidos");
 	
 	// FOR DEBUGGING ONLY
-	//defineGlobal("seed", 123456);
+   //defineGlobal("seed", 123456);
 	//defineGlobal("simu", 1);
 	//defineGlobal("MU", (1e-6/4));
 	//defineGlobal("R", (1e-6/4));
@@ -23,10 +23,9 @@ initialize() {
 	defineGlobal("intronL", 810); // at this point, it doesn't matter the size 
 	defineGlobal("exonL", 324);
 	//defineGlobal("n", 40);
-	//defineGlobal("outDir", "/Users/tur92196/WorkDir/prfratio/SLiM/results/prfratio/iexpansion/-0.02"); // change this to a working dir when testing ouput
-	//defineGlobal("outDir", "results/prfratio/iexpansion/-0.02"); // change this to a working dir when testing ouput	
-	//defineGlobal("model", "iexpansion");
-	defineGlobal("Nx", asInteger(N*10));
+   //defineGlobal("outDir", "/Users/tur92196/WorkDir/prfratio/SLiM/results/prfratio/popstructure/-0.02"); // change this to a working dir when testing ouput
+	//defineGlobal("outDir", "results/prfratio/popstructure/-0.02"); // change this to a working dir when testing ouput	
+	//defineGlobal("model", "popstructure");
 	
 	// FOR DEBUGGING
 	// Track pedigree
@@ -42,10 +41,6 @@ initialize() {
 	
 	initializeGenomicElementType("g1", m1, 1);
 	initializeGenomicElementType("g2", m2, 1);
-	
-   // Test if the sample size n is higher than the population size
-   if (n > Nx)
-       stop("Sample size n can't be larger than the population size after the expansion Nx!!!");	
 	
 	//	Generates intron/exons pairs programatically
 	base=0;
@@ -72,15 +67,16 @@ initialize() {
 	
 	// single recombination rate	
 	initializeRecombinationRate(R);
+
 }
 
 // Create a population of size N individuals
 1 late() {
 	sim.addSubpop("p0", N);
 	
-	// DEBUGGING ONLY	
+	// DEBUGGING ONLY
 	//p0.setValue("previous_N", p0.individualCount);
-	
+	//
 	// Create a log file to track changes in population size for debugging only
    //log = community.createLogFile(paste0(outDir + "/" + model + "_" + Ns + "_" + simu + "_Ne_log.csv"), logInterval=1);
 	//log.addCycle();
@@ -90,38 +86,56 @@ initialize() {
 	//log.addCustomColumn("Ne_inbreeding", "estimateNe_Inbreeding(p0);");
 	//log.addCustomColumn("Ne_inbreeding2", "trackSel_NeInbreeding(p0);");
 	
-	// schedule SAMPLING BLOCK - IT IS BETTER NOW SPECIFY 
+	// schedule SAMPLING BLOCK
 	//community.rescheduleScriptBlock(s0, start=10*N+1, end=10*N+1);
 	//community.rescheduleScriptBlock(s1, start=10*N+N, end=10*N+N);
 
 }
 
-// DEMOGRAPHY BLOCK
+// POPULATION SPLIT BLOCK
 //s0 999999 early(){
-10000 early(){    
-    // Instantaneous population size change - Expansion
-    // Expansion intensity N*10
-    p0.setSubpopulationSize(Nx);
+10000 early(){
+    
+    // Population split at times 10N - same N for 5*N generations before sampling
+    sim.addSubpopSplit("p1", N, p0);
 }
 
-10001:11000 early(){
-    // THIS FORCES ALL NEW MUTATIONS TO HAVE THE s = Ns/Nx
-    sel_muts = sim.mutationsOfType(m2);
-    sel_muts.setSelectionCoeff(Ns/Nx);
+// DEBUGGING STRUCTURE BLOCK
+//10001:15000 early(){
+//    fst = calcFST(p0.genomes, p1.genomes);
+//    print(fst);
+//}
+
+// POPULATION MERGE BLOCKS
+15000 early(){
+    
+    // set up p3 to generate itself entirely from migrants
+    sim.addSubpop("p2", N);
+    p2.setMigrationRates(c(p0,p1), c(0.5, 0.5));
+}
+
+15000 late(){
+
+    // remove the source subpopulations
+	 p2.setMigrationRates(c(p0, p1), c(0.0, 0.0));
+	 p0.setSubpopulationSize(0);
+	 p1.setSubpopulationSize(0);
 }
 
 // SAMPLING BLOCK
 //s1 999999 late(){
-11000 early(){
-    m1fsfs = fsfs(p0, m1, n, F);
-	 m2fsfs = fsfs(p0, m2, n, F);
+15001 late(){
+   
+    // Take a random sample of individuals from the combined population	
+	 m1fsfs = fsfs(p2, m1, n, F);
+	 m2fsfs = fsfs(p2, m2, n, F);
 	 print(m1fsfs);
 	 print("\n");
 	 print(m2fsfs);
 	 print("\n");
-	 print(Ns);   
-    
-    // Save FSFSs to a file:
+	 print(Ns);
+	
+	 // Save FSFSs to a file:
 	if (dist != "fixed") {
 		writeSFS(m1fsfs, paste0(model + "_" + dist + "_" + distpars + "_" + simu + "_sfs_neutral"), outDir);
 		writeSFS(m2fsfs, paste0(model + "_" + dist + "_" + distpars + "_" + simu + "_sfs_selected"), outDir);
@@ -130,8 +144,56 @@ initialize() {
 		writeSFS(m1fsfs, paste0(model + "_" + dist + "_" + Ns + "_" + simu + "_sfs_neutral"), outDir);
 		writeSFS(m2fsfs, paste0(model + "_" + dist + "_" + Ns + "_" + simu + "_sfs_selected"), outDir);
 	}
+    /////REMOVE?    
+    //m1pooledsfs = twoPopPooledfsfs(p0, p1, m1, ngenes1, ngenes2, F);
+	 //m2pooledsfs = twoPopPooledfsfs(p0, p1, m2, ngenes1, ngenes2, F);
+	
+	 //print(m1pooledsfs);
+	 //print("\n");
+	 //print(m2pooledsfs);
+	
+	 // Save FSFSs to a file:
+	 //writeSFS(m1pooledsfs, paste0(model + "_" + Ns + "_" + simu + "_sfs_neutral"), outDir);
+	 //writeSFS(m2pooledsfs, paste0(model + "_" + Ns + "_" + simu + "_sfs_selected"), outDir); 
 	
 	 sim.simulationFinished();
 }
 
-
+//REMOVE?
+//function (*)twoPopPooledfsfs(o<Subpopulation>$ subpop1, o<Subpopulation>$ subpop2, o<MutationType>$ mutType, i$ ngenesFromPop1, i$ ngenesFromPop2, [logical$ outInvariants = F])
+//{
+//	// randomly sample genomes from each population
+//	// Generate a random binomial number for the number of genomes 
+//   // to be sampled for population 1; take the difference for population 2
+//   
+//   sg1 = sample(subpop1.genomes, size = ngenesFromPop1, replace = F);
+//   sg2 = sample(subpop2.genomes, size = ngenesFromPop2, replace = F);
+//
+//   muts = sim.mutationsOfType(mutType);
+//   vdac = sg1.mutationCountsInGenomes(muts) + sg2.mutationCountsInGenomes(muts);   
+//   
+//   Chr = ngenesFromPop1 + ngenesFromPop2;   
+//   sampleSize = asInteger(Chr/2);
+//   
+//	// Calculate the FSFS
+//	fsfs = rep(0, sampleSize+1);
+//	for (i in seqAlong(vdac))
+//	{
+//	    // get the derived and ancestral allele counts
+//       dac = vdac[i];	
+//       aac = Chr - dac;	
+//	
+//	    // set the minimum for the folded-sfs
+//	    mac = min(c(aac, dac));
+//	
+//	    // fill the vector with the counts for each bin
+//	    fsfs[mac] = fsfs[mac] + 1;
+//	}//end of for loop
+//	
+//	// if output invariants, return the full folded-sfs, 
+//	// if not, remove the invariant bin
+//	if (outInvariants)
+//	   return fsfs;
+//	else
+//	   return fsfs[1:(size(fsfs)-1)];
+//}
