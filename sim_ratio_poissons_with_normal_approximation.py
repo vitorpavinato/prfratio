@@ -1,8 +1,6 @@
-import numpy as np
-from scipy.stats import norm
-import matplotlib.pyplot as plt
-import math
 """
+not current as of 8/24/2023
+
 simulate distribution of ratio Z=X/Y  where X and Y are poisson rvs
 use expressions in Díaz-Francés, E. and F. J. Rubio (2013). "On the existence of a normal approximation to the distribution of the ratio of two independent normal random variables." Statistical Papers 54: 309-323.
 to approximate the density	
@@ -14,6 +12,11 @@ to run:
     if the normal approximation for the ratio is desired in the plot,  napprox = True
 
 """
+import numpy as np
+from scipy.stats import norm
+import matplotlib.pyplot as plt
+import math
+
 def f(z,beta,rho,deltay):
     rho2 = rho*rho
     z2 = z*z
@@ -26,6 +29,7 @@ def f(z,beta,rho,deltay):
         return temp1*temp2*temp3
     else:
         return 0
+
 ux = 5
 uy = 10
 napprox = False
