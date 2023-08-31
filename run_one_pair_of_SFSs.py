@@ -8,7 +8,8 @@ from scipy.stats import norm
 import matplotlib.pyplot as plt
 from scipy.optimize import minimize,minimize_scalar
 from scipy.stats import chi2
-import  SFS_functions
+# import  SFS_functions
+import  SFS_functions_trimmed as SFS_functions 
 import math
 import warnings
 warnings.filterwarnings("ignore")
