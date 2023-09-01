@@ -9,13 +9,14 @@ when using external data, use -a
 code must be updated to deal with this each each point where
     SFS_functions.simsfs_gdist or SFS_functions.simsfs  is called
 
-usage: SFS_estimator_bias_variance.py [-h] [-a DATAFILENAME] [-d DENSITYOF2NS] [-f] -k NTRIALS [-l PLOTFILELABEL]
-                                      [-m MAXI] -n N [-p] -q THETAS [-r] [-s SEED] [-t THETAN] [-w]
+usage: SFS_estimator_bias_variance.py [-h] [-d DENSITYOF2NS] [-f] -k NTRIALS [-l PLOTFILELABEL]
+                                      [-m MAXI] -n N [-p] -q THETAS [-r] [-s SEED] [-t THETAN]
+                                      [-w] [-x GDENSITYMAX] [-z]
 
 options:
   -h, --help        show this help message and exit
-  -a DATAFILENAME   optional data file with simulated SFSs
-  -d DENSITYOF2NS   gamma or lognormal, only if simulating a distribution of Ns, else single values of Ns are used
+  -d DENSITYOF2NS   gamma or lognormal, only if simulating a distribution of Ns, else single
+                    values of Ns are used
   -f                use folded SFS distribution
   -k NTRIALS        number of trials per parameter set
   -l PLOTFILELABEL  optional string for labelling plot file names
@@ -25,8 +26,11 @@ options:
   -q THETAS         theta for selected sites
   -r                simulate Fisher-Wright RATIO, RATIOPRF
   -s SEED           random number seed (positive integer)
-  -t THETAN         theta for neutral sites, optional, if -t is not specified then thetaN and thetaS are given by -q
-  -w                use watterson estimator for thetaN    
+  -t THETAN         set theta for neutral sites, optional when -r is used, if -t is not
+                    specified then thetaN and thetaS are given by -q
+  -w                use watterson estimator for thetaN
+  -x GDENSITYMAX    maximum value of 2Ns density, default is 1.0, use with -d
+  -z                estimate the maximum of the density of 2Ns
 
 
 """
@@ -42,10 +46,11 @@ import argparse
 # import warnings
 # warnings.filterwarnings("ignore")
 
-if SFS_functions.SSFconstant_dokuethe:
-    optimizemethod="Powell"
-else:
-    optimizemethod="Nelder-Mead"
+# as of 8/23/2023 Kuethe method does not work as well
+# if SFS_functions.SSFconstant_dokuethe:
+#     optimizemethod="Powell"
+# else:
+#     optimizemethod="Nelder-Mead"
 optimizemethod="Powell"
 
 def makeSFScomparisonstring(headers,sfslist):
@@ -63,6 +68,33 @@ def makeSFScomparisonstring(headers,sfslist):
     slist.append("\n")   
     return ''.join(slist) 
 
+def make_outfile_name_base(args):
+    if args.plotfilelabel != "" and args.plotfilelabel[-1] != "_": # add a spacer if needed
+        args.plotfilelabel += "_"  
+    a = []
+    if args.dobasicPRF:
+        a.append("{}basicPRF_k{}_n{}_Qs{:.0f}_".format(args.plotfilelabel,args.ntrials,args.n,args.thetaS))
+        a.append("")
+    else:
+        a.append("{}ratioPRF_k{}_n{}_Qs{:.0f}_Qn{:.0f}_".format(args.plotfilelabel,args.ntrials,args.n,args.thetaS,args.thetaN))
+    if args.dofolded:
+        a.append("folded_")
+    if args.densityof2Ns:
+        a.append("{}_".format(args.densityof2Ns))
+    if args.gdensitymax != 1.0:
+        a.append("gmax{}_".format(args.gdensitymax))
+    if args.use_watterson_thetaN:
+        a.append("WQn_".format(args.densityof2Ns))        
+    if args.maxi:
+        a.append("maxi{}_".format(args.maxi))
+    basename = ''.join(a)
+    if basename[-1] =='_':
+        basename = basename[:-1]
+    # print (args)
+    # print(basename)
+    return basename
+
+
 def run(args):
 
     SFS_functions.SSFconstant_dokuethe = False #  True
@@ -73,17 +105,18 @@ def run(args):
     doratioPRF = args.doratioPRF
     densityof2Ns = args.densityof2Ns 
     dofolded = args.dofolded
-    if args.plotfilelabel != "" and args.plotfilelabel[-1] != "_": # add a spacer if needed
-        args.plotfilelabel += "_"  
+    gdm = args.gdensitymax
+    if gdm != 1.0:
+        SFS_functions.reset_g_xvals(gdm)
+
     n = args.n
     
     if args.thetaN:
         thetaN = args.thetaN
         thetaNresults = []
-        estimatetwothetas = True
     else:
         thetaN = args.thetaS
-        estimatetwothetas = False
+        args.thetaN = args.thetaS
     thetaS = args.thetaS
     foldstring = "folded" if dofolded else "unfolded"
     thetaSresults = []
@@ -98,72 +131,51 @@ def run(args):
     else: #densityof2Ns==None
         gvals = [-10,-5,-2,-1,0,1,2,5,10]
         gresults = []
-
+    thetastart = 200 
+    gdensitystart = [2.0,1.0]
     SFScomparesultsstrings = []
-
-    if dobasicPRF:
-        if densityof2Ns:
-            plotfile1name = '{}basicPRF_{}_term_1_k{}_n{}_{}_QS{}.png'.format(args.plotfilelabel,densityof2Ns,ntrialsperg,n,foldstring,round(thetaS))
-            plotfile2name = '{}basicPRF_{}_term_2_k{}_n{}_{}_QS{}.png'.format(args.plotfilelabel,densityof2Ns,ntrialsperg,n,foldstring,round(thetaS))
-            
-        else:
-            plotfilename = '{}basicPRF_g_k{}_n{}_{}_QS{}.png'.format(args.plotfilelabel,ntrialsperg,n,foldstring,round(thetaS))
-        estimates_filename = '{}basicPRF_{}_ThetaS_k{}_n{}_{}_QS{}_results.txt'.format(args.plotfilelabel,densityof2Ns,ntrialsperg,n,foldstring,round(thetaS))
+    basename = make_outfile_name_base(args)
+    if densityof2Ns:
+        plotfile1name = '{}_term1_plot.png'.format(basename)
+        plotfile2name = '{}_term2_plot.png'.format(basename)
         
+    else:
+        plotfilename = '{}_2Ns_plot.png'.format(basename)
+    estimates_filename = '{}_results.txt'.format(basename)    
+    
+    if dobasicPRF:
         savedSFSS = [[] for i in range(len(gvals))]
-
         results = []
         for gi,g in enumerate(gvals):
             thetaSresults.append([])
             if densityof2Ns:
                 ln1results.append([])
                 ln2results.append([])
-
-                SFScompareheaders = ["Params:{} {} Trial#{}:".format(g[0],g[1],gi+1),"sim","fit"]
             else:
                 gresults.append([])  
-                SFScompareheaders = ["Param:{} Trial#{}:".format(g,gi+1),"sim","fit"]
+                
             for i in range(ntrialsperg):
                 if densityof2Ns:
-                    thetastart = 200
-                    if densityof2Ns=='lognormal':
-                        sfs,sfsfolded =  SFS_functions.simsfs_gdist(thetaS,n,args.maxi,lognormal = g)  
-                        term1start = 1.0
-                        term2start = 1.0
-                        boundsarray = [(thetastart/10,thetastart*10),(0.01,10),(0.01,10)]
-                    else :
-                        sfs,sfsfolded =  SFS_functions.simsfs_gdist(thetaS,n,args.maxi,gamma = g) 
-                        term1start = 2.0
-                        term2start = 2.0
-                        boundsarray = [(thetastart/10,thetastart*10),(1,10),(0,10)]
-                    startarray = [thetastart,term1start,term2start]
-                    if densityof2Ns=='lognormal':
-                        nlfunc = SFS_functions.NegL_SFS_Theta_Ns_Lognormal
-                    elif densityof2Ns == 'gamma':
-                        nlfunc = SFS_functions.NegL_SFS_Theta_Ns_Gamma
-                    else:
-                        print("no distribution function")
-                        exit()
+                    sfs,sfsfolded =  SFS_functions.simsfs_continuous_gdist(thetaS,gdm,n,args.maxi,densityof2Ns,(g[0],g[1]),False)  
+                    startarray = [thetastart,gdensitystart[0],gdensitystart[1]]
+                    boundsarray = [(thetastart/10,thetastart*10),(0.01,10),(0.01,10)]  
                     
-                    result = minimize(nlfunc,np.array(startarray),args=(n,dofolded,sfsfolded if dofolded else sfs),method=optimizemethod,bounds=boundsarray)
+                    result = minimize(SFS_functions.NegL_SFS_ThetaS_Ns_density,np.array(startarray),args=(gdm,n,args.dofolded,densityof2Ns,sfsfolded if dofolded else sfs),method=optimizemethod,bounds=boundsarray)
                     thetaSresults[gi],ln1results[gi],ln2results[gi] = [lst + [val] for lst, val in zip([thetaSresults[gi],ln1results[gi],ln2results[gi]], result.x)]
+                    SFScompareheaders = ["Params:{} {} Trial#{}:".format(g[0],g[1],i+1),"sim","fit"]
+                    sfsfit,sfsfoldedfit =  SFS_functions.simsfs_continuous_gdist(thetaSresults[gi][-1],gdm,n,args.maxi,densityof2Ns,(ln1results[gi][-1],ln2results[gi][-1]),True)  
                 else:
-                    sfs,sfsfolded = SFS_functions.simsfs(thetaS,g,n,args.maxi)
+                    sfs,sfsfolded = SFS_functions.simsfs(thetaS,g,n,args.maxi,False)
                     thetastart = 100.0
                     gstart = -1.0
-                    result = minimize(SFS_functions.NegL_SFS_Theta_Ns,np.array([thetastart,gstart]),args=(n,dofolded,sfsfolded if dofolded else sfs),method=optimizemethod,bounds=[(thetastart/10,thetastart*10),(15*gstart,-15*gstart)])
-                    thetaSresults[gi],gresults[gi] = [lst + [val] for lst, val in zip([thetaSresults[gi],gresults[gi]], result.x)]                    
+                    boundsarray = [(thetastart/10,thetastart*10),(15*gstart,-15*gstart)]  
+                    result = minimize(SFS_functions.NegL_SFS_Theta_Ns,np.array([thetastart,gstart]),args=(n,dofolded,sfsfolded if dofolded else sfs),method=optimizemethod,bounds=boundsarray)
+                    thetaSresults[gi],gresults[gi] = [lst + [val] for lst, val in zip([thetaSresults[gi],gresults[gi]], result.x)]   
+                    SFScompareheaders = ["Param:{} Trial#{}:".format(g,i+1),"sim","fit"]                 
+                    sfsfit,sfsfoldedfit = SFS_functions.simsfs(thetaSresults[gi][-1],gresults[gi][-1],n,args.maxi,True)
+                SFScomparesultsstrings.append(makeSFScomparisonstring(SFScompareheaders,[sfs,sfsfit]))
                 savedSFSS[gi].append(sfsfolded if dofolded else sfs)
 
-            if densityof2Ns:
-                if densityof2Ns=='lognormal':
-                    sfsfit,sfsfoldedfit =  SFS_functions.simsfs_gdist(thetaSresults[gi][-1],n,args.maxi,lognormal = (ln1results[gi][-1],ln2results[gi][-1]))  
-                    
-                if densityof2Ns=='gamma':
-                    sfsfit,sfsfoldedfit =  SFS_functions.simsfs_gdist(thetaSresults[gi][-1],n,args.maxi,gamma = (ln1results[gi][-1],ln2results[gi][-1]))  
-            else:
-                sfsfit,sfsfoldedfit = SFS_functions.simsfs(thetaSresults[gi][-1],gresults[gi][-1],n,args.maxi)
-            SFScomparesultsstrings.append(makeSFScomparisonstring(SFScompareheaders,[sfs,sfsfit]))
         if densityof2Ns: 
             term1vals = []
             term2vals = []
@@ -200,13 +212,22 @@ def run(args):
         f.write("\nCompare simulated and fitted SFS:\n=================================\n")
         f.write(''.join(SFScomparesultsstrings))
         f.write("Parameter Estimates:\n===================\n")
-        for gi,g in enumerate(gvals):
-            f.write("\tSet {} Values:\t\tThetaS {}\t\tg1 {}\t\tg2 {}\n".format(gi+1,args.thetaS,g[0],g[1]))
-            for k in range(ntrialsperg):
-                f.write("\t\t{}\t\t{:.1f}\t\t{:.2f}\t\t{:.2f}\n".format(k+1,thetaSresults[gi][k],ln1results[gi][k],ln2results[gi][k]))
-            f.write("\tMean:\t\t{:.1f}\t\t{:.2f}\t\t{:.2f}\n".format(np.mean(np.array(thetaSresults[gi])),np.mean(np.array(ln1results[gi])),np.mean(np.array(ln2results[gi]))))
-            f.write("\tStDev:\t\t{:.1f}\t\t{:.2f}\t\t{:.2f}\n".format(np.std(np.array(thetaSresults[gi])),np.std(np.array(ln1results[gi])),np.std(np.array(ln2results[gi]))))
-        f.write("\n\n")        
+        if densityof2Ns:
+            for gi,g in enumerate(gvals):
+                f.write("\tSet {} Values:\t\tThetaS {}\t\tg1 {}\t\tg2 {}\n".format(gi+1,args.thetaS,g[0],g[1]))
+                for k in range(ntrialsperg):
+                    f.write("\t\t{}\t\t{:.1f}\t\t{:.2f}\t\t{:.2f}\n".format(k+1,thetaSresults[gi][k],ln1results[gi][k],ln2results[gi][k]))
+                f.write("\tMean:\t\t{:.1f}\t\t{:.2f}\t\t{:.2f}\n".format(np.mean(np.array(thetaSresults[gi])),np.mean(np.array(ln1results[gi])),np.mean(np.array(ln2results[gi]))))
+                f.write("\tStDev:\t\t{:.1f}\t\t{:.2f}\t\t{:.2f}\n".format(np.std(np.array(thetaSresults[gi])),np.std(np.array(ln1results[gi])),np.std(np.array(ln2results[gi]))))
+            
+        else:     
+            for gi,g in enumerate(gvals):
+                f.write("\tSet {} Values:\t\tThetaS {}\t\tg {}\n".format(gi+1,args.thetaS,g))
+                for k in range(ntrialsperg):
+                    f.write("\t\t{}\t\t{:.1f}\t\t{:.2f}\n".format(k+1,thetaSresults[gi][k],gresults[gi][k]))
+                f.write("\tMean:\t\t{:.1f}\t\t{:.2f}\n".format(np.mean(np.array(thetaSresults[gi])),np.mean(np.array(gresults[gi]))))
+                f.write("\tStDev:\t\t{:.1f}\t\t{:.2f}\n".format(np.std(np.array(thetaSresults[gi])),np.std(np.array(gresults[gi]))))
+        f.write("\n\n")   
 
         f.write("Mean SFS Counts For Each Parameter Set:\n=================================================\n")     
         f.write("Selection parameter sets: {}\n".format(" ".join(list(map(str,gvals)))))
@@ -219,128 +240,62 @@ def run(args):
         f.close()
 
     if doratioPRF:
-        thetaSresults = []
+        thetaNresults = []
         savedSFSS = [[] for i in range(len(gvals))]  
         savedSFSN = [[] for i in range(len(gvals))]      
         savedRATIOs = [[] for i in range(len(gvals))]
-        if estimatetwothetas:
-            if densityof2Ns:
-                plotfile1name = '{}ratioPRF_{}_term_1_k{}_n{}_{}_QS{}_QN{}.png'.format(args.plotfilelabel,densityof2Ns,ntrialsperg,n,foldstring,round(thetaS),round(thetaN))
-                plotfile2name = '{}ratioPRF_{}_term_2_k{}_n{}_{}_QS{}_QN{}.png'.format(args.plotfilelabel,densityof2Ns,ntrialsperg,n,foldstring,round(thetaS),round(thetaN))
-                estimates_filename = '{}ratioPRF_{}_ThetaS_ThetaN_k{}_n{}_{}_QS{}_QN{}_results.txt'.format(args.plotfilelabel,densityof2Ns,ntrialsperg,n,foldstring,round(thetaS),round(thetaN))
-
-            else:
-                plotfilename = '{}ratioPRF_g_k{}_n{}_{}_QS{}_QN{}.png'.format(args.plotfilelabel,ntrialsperg,n,foldstring,round(thetaS),round(thetaN))            
-                estimates_filename = '{}ratioPRF_ThetaS_ThetaN_k{}_n{}_{}_QS{}_QN{}_results.txt'.format(args.plotfilelabel,ntrialsperg,n,foldstring,round(thetaS),round(thetaN))
-        else:
-            if densityof2Ns:
-                plotfile1name = '{}ratioPRF_{}_term_1_k{}_n{}_{}_QS{}.png'.format(args.plotfilelabel,densityof2Ns,ntrialsperg,n,foldstring,round(thetaS))
-                plotfile2name = '{}ratioPRF_{}_term_2_k{}_n{}_{}_QS{}.png'.format(args.plotfilelabel,densityof2Ns,ntrialsperg,n,foldstring,round(thetaS))
-                estimates_filename = '{}ratioPRF_{}_ThetaS_k{}_n{}_{}_QS{}_results.txt'.format(args.plotfilelabel,densityof2Ns,ntrialsperg,n,foldstring,round(thetaS))    
-            else:
-                plotfilename = '{}ratioPRF_g_k{}_n{}_{}_QS{}.png'.format(args.plotfilelabel,ntrialsperg,n,foldstring,round(thetaS))
-                estimates_filename = '{}ratioPRF_ThetaS_k{}_n{}_{}_QS{}_results.txt'.format(args.plotfilelabel,ntrialsperg,n,foldstring,round(thetaS))
-        # estimatesF = open(estimates_filename,"w")
-        # estimatesF.write("Program SFS_estimator_bias_variance.py results:\n\nCommand line arguments:\n=======================\n")
-        # for key, value in vars(args).items():
-        #     estimatesF.write("\t{}: {}\n".format(key,value))
-        # estimatesF.write("\nCompare simulated and fitted SFS:\n=================================\n")
-        # estimatesF.close()               
         results = []
         for gi,g in enumerate(gvals):
             
             thetaSresults.append([])
-            if args.thetaN:
-                thetaNresults.append([])
+            thetaNresults.append([])
             if densityof2Ns:
                 ln1results.append([])
                 ln2results.append([])
-                SFScompareheaders = ["Params:{} {} Trial#{}:".format(g[0],g[1],gi+1),"Nsim","Ssim","Ratiosim","Nfit","Sfit","Ratiofit"]
             else:
                 gresults.append([])
-                SFScompareheaders = ["Param:{} Trial#{}:".format(g,gi+1),"Nsim","Ssim","Ratiosim","Nfit","Sfit","Ratiofit"]
             for i in range(ntrialsperg):
                 thetastart = 200
                 if densityof2Ns:
-                    if densityof2Ns=='lognormal':
-                        nsfs,ssfs,ratios =  SFS_functions.simsfsratio(thetaN,thetaS,n,args.maxi,dofolded,g = g, distribution="lognormal")
-                        term1start = 1.0
-                        term2start = 1.0
-                        if args.use_watterson_thetaN:
-                            thetaNest = sum(nsfs)/sum([1/i for i in range(1,n)]) # this should work whether or not the sfs is folded 
-                            nlfunc = SFS_functions.NegL_SFSRATIO_Theta_Lognormal_given_thetaN
-                            # countratio = sum(nsfs)/sum(ssfs)
-                            # nlfunc = SFS_functions.NegL_SFSRATIO_Theta_Gamma_EX
-
-                            boundsarray = [(thetastart/10,thetastart*10),(0.01,10),(0.01,10)]          
-                            startarray = [thetastart,term1start,term2start]                                       
-                        else:                        
-                            if estimatetwothetas:
-                                boundsarray = [(thetastart/10,thetastart*10),(thetastart/10,thetastart*10),(0.01,10),(0.01,10)]
-                            else:
-                                boundsarray = [(thetastart/10,thetastart*10),(0.01,10),(0.01,10)]
-                            nlfunc = SFS_functions.NegL_SFSRATIO_Theta_Lognormal
-                    elif densityof2Ns=="gamma":
-   
-                        nsfs,ssfs,ratios =  SFS_functions.simsfsratio(thetaN,thetaS,n,args.maxi,dofolded,g = g,distribution="gamma") 
-                        term1start = 2.0
-                        term2start = 2.0
-                        if args.use_watterson_thetaN:
-                            thetaNest = sum(nsfs)/sum([1/i for i in range(1,n)])  # this should work whether or not the sfs is folded 
-                            nlfunc = SFS_functions.NegL_SFSRATIO_Theta_Gamma_given_thetaN
-                            # countratio = sum(nsfs)/sum(ssfs)
-                            # nlfunc = SFS_functions.NegL_SFSRATIO_Theta_Gamma_EX
-
-                            boundsarray = [(thetastart/10,thetastart*10),(0.01,10),(0.01,10)]          
-                            startarray = [thetastart,term1start,term2start]                                       
-                        else:
-                            if estimatetwothetas:
-                                boundsarray = [(thetastart/10,thetastart*10),(thetastart/10,thetastart*10),(0.01,10),(0.01,10)]     
-                            else:
-                                boundsarray = [(thetastart/10,thetastart*10),(0.01,10),(0.01,10)]     
-                            nlfunc = SFS_functions.NegL_SFSRATIO_Theta_Gamma
+                    SFScompareheaders = ["Params:{} {} Trial#{}:".format(g[0],g[1],i+1),"Nsim","Ssim","Ratiosim","Nfit","Sfit","Ratiofit"]
+                    nsfs,ssfs,ratios =  SFS_functions.simsfsratio(thetaN,thetaS,gdm,n,args.maxi,dofolded,densityof2Ns,g,False) 
                     if args.use_watterson_thetaN:
-                        result = minimize(nlfunc,np.array(startarray),args=(n,thetaN,dofolded,ratios),method=optimizemethod,bounds=boundsarray) 
+                        thetaNest = sum(nsfs)/sum([1/i for i in range(1,n)]) # this should work whether or not the sfs is folded 
+                        boundsarray = [(thetastart/10,thetastart*10),(0.01,10),(0.01,10)]          
+                        startarray = [thetastart,gdensitystart[0],gdensitystart[1]]  
+                        result = minimize(SFS_functions.NegL_SFSRATIO_Theta_Nsdensity_given_thetaN,np.array(startarray),args=(gdm,n,thetaN,dofolded,densityof2Ns,ratios),method=optimizemethod,bounds=boundsarray) 
                         thetaSresults[gi],ln1results[gi],ln2results[gi] = [lst + [val] for lst, val in zip([thetaSresults[gi],ln1results[gi],ln2results[gi]], result.x)]
-                        thetaNresults[gi].append(thetaNest)
-                        # result = minimize(nlfunc,np.array(startarray),args=(n,countratio,dofolded,ratios),method=optimizemethod,bounds=boundsarray)       
-                        # thetaSresults[gi],ln1results[gi],ln2results[gi] = [lst + [val] for lst, val in zip([thetaSresults[gi],ln1results[gi],ln2results[gi]], result.x)]
-                        # thetaNresults[gi].append(SFS_functions.estimate_thetaN(result.x,n,countratio,dofolded))                        
+                        thetaNresults[gi].append(thetaNest)                         
                     else:
-                        if estimatetwothetas:
-                            startarray = [thetastart,thetastart,term1start,term2start]           
-                        else:
-                            startarray = [thetastart,term1start,term2start] 
-                        result = minimize(nlfunc,np.array(startarray),args=(n,dofolded,ratios),method=optimizemethod,bounds=boundsarray)  
-                        
-                        if estimatetwothetas:
-                            thetaNresults[gi],thetaSresults[gi],ln1results[gi],ln2results[gi] = [lst + [val] for lst, val in zip([thetaNresults[gi],thetaSresults[gi],ln1results[gi],ln2results[gi]], result.x)]
-                        else:
-                            thetaSresults[gi],ln1results[gi],ln2results[gi] = [lst + [val] for lst, val in zip([thetaSresults[gi],ln1results[gi],ln2results[gi]], result.x)]
-
-                    if estimatetwothetas:
-                        fitnsfs,fitssfs,fitratios =  SFS_functions.simsfsratio(thetaNresults[gi][-1],thetaSresults[gi][-1],n,args.maxi,dofolded,g = [ln1results[gi][-1],ln2results[gi][-1]], distribution=densityof2Ns)
-                    else:
-                        fitnsfs,fitssfs,fitratios =  SFS_functions.simsfsratio(thetaSresults[gi][-1],thetaSresults[gi][-1],n,args.maxi,dofolded,g = [ln1results[gi][-1],ln2results[gi][-1]], distribution=densityof2Ns)
+                        boundsarray = [(thetastart/10,thetastart*10),(thetastart/10,thetastart*10),(0.01,10),(0.01,10)]     
+                        startarray = [thetastart,thetastart,gdensitystart[0],gdensitystart[1]]   
+                        result = minimize(SFS_functions.NegL_SFSRATIO_Theta_Nsdensity,np.array(startarray),args=(gdm,n,dofolded,densityof2Ns,ratios),method=optimizemethod,bounds=boundsarray)  
+                        thetaNresults[gi],thetaSresults[gi],ln1results[gi],ln2results[gi] = [lst + [val] for lst, val in zip([thetaNresults[gi],thetaSresults[gi],ln1results[gi],ln2results[gi]], result.x)]
+                    fitnsfs,fitssfs,fitratios =  SFS_functions.simsfsratio(thetaNresults[gi][-1],thetaSresults[gi][-1],gdm,n,args.maxi,dofolded,densityof2Ns,[ln1results[gi][-1],ln2results[gi][-1]],True)
                     SFScomparesultsstrings.append(makeSFScomparisonstring(SFScompareheaders,[nsfs,ssfs,ratios,fitnsfs,fitssfs,fitratios]))
                 else:
-                    nsfs,ssfs,ratios =  SFS_functions.simsfsratio(thetaN,thetaS,n,args.maxi,dofolded,g = g)
+                    SFScompareheaders = ["Param:{} Trial#{}:".format(g,i+1),"Nsim","Ssim","Ratiosim","Nfit","Sfit","Ratiofit"]
+                    nsfs,ssfs,ratios =  SFS_functions.simsfsratio(thetaN,thetaS,gdm,n,args.maxi,dofolded,None,g,False)
                     thetastart = 100.0
                     gstart = -1.0
-                    if estimatetwothetas:
-                        boundsarray = [(thetastart/10,thetastart*10),(thetastart/10,thetastart*10),(15*gstart,-15*gstart)]     
-                        startarray = [thetastart,thetastart,gstart]
-                    else:
+                    if args.use_watterson_thetaN:
+                        thetaNest = sum(nsfs)/sum([1/i for i in range(1,n)]) # this should work whether or not the sfs is folded 
                         boundsarray = [(thetastart/10,thetastart*10),(15*gstart,-15*gstart)]     
                         startarray = [thetastart,gstart]
-                    result =  minimize(SFS_functions.NegL_SFSRATIO_Theta_Ns,np.array(startarray),args=(n,dofolded,ratios,False),method=optimizemethod,bounds=boundsarray)
-                    if estimatetwothetas:
-                        thetaNresults[gi],thetaSresults[gi],gresults[gi] = [lst + [val] for lst, val in zip([thetaNresults[gi],thetaSresults[gi],gresults[gi]], result.x)]
-                        fitnsfs,fitssfs,fitratios =  SFS_functions.simsfsratio(thetaNresults[gi][-1],thetaSresults[gi][-1],n,args.maxi,dofolded,g = gresults[gi][-1],distribution=densityof2Ns)
-                        SFScomparesultsstrings.append(makeSFScomparisonstring(SFScompareheaders,[nsfs,ssfs,ratios,fitnsfs,fitssfs,fitratios]))
+                        nlfunc = SFS_functions.NegL_SFSRATIO_Theta_Ns_given_thetaN 
+                        nlargs = (n,thetaNest,dofolded,ratios,False)
                     else:
-                        thetaSresults[gi],gresults[gi] = [lst + [val] for lst, val in zip([thetaSresults[gi],gresults[gi]], result.x)]     
-                        fitnsfs,fitssfs,fitratios =  SFS_functions.simsfsratio(thetaSresults[gi][-1],thetaSresults[gi][-1],n,args.maxi,dofolded,g = gresults[gi][-1],distribution=densityof2Ns)
+                        nlfunc = SFS_functions.NegL_SFSRATIO_Theta_Ns
+                        nlargs = (n,dofolded,ratios,False)
+                        boundsarray = [(thetastart/10,thetastart*10),(thetastart/10,thetastart*10),(15*gstart,-15*gstart)]     
+                        startarray = [thetastart,thetastart,gstart]
+                    result =  minimize(nlfunc,np.array(startarray),args=nlargs,method=optimizemethod,bounds=boundsarray)
+                    if args.use_watterson_thetaN:
+                        thetaSresults[gi],gresults[gi] = [lst + [val] for lst, val in zip([thetaSresults[gi],gresults[gi]], result.x)]
+                        thetaNresults[gi].append(thetaNest)                        
+                    else:
+                        thetaNresults[gi],thetaSresults[gi],gresults[gi] = [lst + [val] for lst, val in zip([thetaNresults[gi],thetaSresults[gi],gresults[gi]], result.x)]
+                    fitnsfs,fitssfs,fitratios =  SFS_functions.simsfsratio(thetaNresults[gi][-1],thetaSresults[gi][-1],gdm,n,args.maxi,dofolded,None,gresults[gi][-1],True)
                     SFScomparesultsstrings.append(makeSFScomparisonstring(SFScompareheaders,[nsfs,ssfs,ratios,fitnsfs,fitssfs,fitratios]))
                 savedSFSS[gi].append(ssfs)
                 savedSFSN[gi].append(nsfs)
@@ -383,11 +338,18 @@ def run(args):
         # f = open(estimates_filename,"a")
         f.write("Parameter Estimates:\n===================\n")
         for gi,g in enumerate(gvals):
-            f.write("\tSet {} Values:\t\tThetaS {}\t\tThetaN {}\t\tg1 {}\t\tg2 {}\n".format(gi+1,args.thetaS,args.thetaN,g[0],g[1]))
-            for k in range(ntrialsperg):
-                f.write("\t\t{}\t\t{:.1f}\t\t{:.1f}\t\t{:.2f}\t\t{:.2f}\n".format(k+1,thetaSresults[gi][k],thetaNresults[gi][k],ln1results[gi][k],ln2results[gi][k]))
-            f.write("\tMean:\t\t{:.1f}\t\t{:.1f}\t\t{:.2f}\t\t{:.2f}\n".format(np.mean(np.array(thetaSresults[gi])),np.mean(np.array(thetaNresults[gi])),np.mean(np.array(ln1results[gi])),np.mean(np.array(ln2results[gi]))))
-            f.write("\tStDev:\t\t{:.1f}\t\t{:.1f}\t\t{:.2f}\t\t{:.2f}\n".format(np.std(np.array(thetaSresults[gi])),np.std(np.array(thetaNresults[gi])),np.std(np.array(ln1results[gi])),np.std(np.array(ln2results[gi]))))
+            if densityof2Ns:
+                f.write("\tSet {} Values:\t\tThetaS {}\t\tThetaN {}\t\tg1 {}\t\tg2 {}\n".format(gi+1,args.thetaS,args.thetaN,g[0],g[1]))
+                for k in range(ntrialsperg):
+                    f.write("\t\t{}\t\t{:.1f}\t\t{:.1f}\t\t{:.2f}\t\t{:.2f}\n".format(k+1,thetaSresults[gi][k],thetaNresults[gi][k],ln1results[gi][k],ln2results[gi][k]))
+                f.write("\tMean:\t\t{:.1f}\t\t{:.1f}\t\t{:.2f}\t\t{:.2f}\n".format(np.mean(np.array(thetaSresults[gi])),np.mean(np.array(thetaNresults[gi])),np.mean(np.array(ln1results[gi])),np.mean(np.array(ln2results[gi]))))
+                f.write("\tStDev:\t\t{:.1f}\t\t{:.1f}\t\t{:.2f}\t\t{:.2f}\n".format(np.std(np.array(thetaSresults[gi])),np.std(np.array(thetaNresults[gi])),np.std(np.array(ln1results[gi])),np.std(np.array(ln2results[gi]))))
+            else:
+                f.write("\tSet {} Values:\t\tThetaS {}\t\tThetaN {}\t\tg {}\n".format(gi+1,args.thetaS,args.thetaN,g))
+                for k in range(ntrialsperg):
+                    f.write("\t\t{}\t\t{:.1f}\t\t{:.1f}\t\t{:.2f}\n".format(k+1,thetaSresults[gi][k],thetaNresults[gi][k],gresults[gi][k]))
+                f.write("\tMean:\t\t{:.1f}\t\t{:.1f}\t\t{:.2f}\n".format(np.mean(np.array(thetaSresults[gi])),np.mean(np.array(thetaNresults[gi])),np.mean(np.array(gresults[gi]))))
+                f.write("\tStDev:\t\t{:.1f}\t\t{:.1f}\t\t{:.2f}\n".format(np.std(np.array(thetaSresults[gi])),np.std(np.array(thetaNresults[gi])),np.std(np.array(gresults[gi]))))
         f.write("\n\n")
         f.write("Mean SFS Counts For Each Parameter Set (Neutral, Selected, Ratio):\n==================================================================\n")     
         f.write("Selection parameter sets: {}\n".format(" ".join(list(map(str,gvals)))))
@@ -402,20 +364,11 @@ def run(args):
                 rtemp = sum([savedRATIOs[gi][j][i] for j in range (ntrialsperg)])/ntrialsperg
                 f.write("\t{:.1f}\t{:.1f}\t{:.3f}".format(ntemp,stemp,rtemp))
             f.write("\n")
-        # f.write("\n")
-        # for gi,g in enumerate(gvals):
-        #     f.write("Theta estimates for Ns (g) value {}:\n".format(g))
-        #     if estimatetwothetas:
-        #         f.write("\tthetaS mean: {:.4f}  stdev {:.4f} \n".format(np.mean(np.array(thetaSresults[gi])),np.std(np.array(thetaSresults[gi]))) )
-        #         f.write("\tthetaN mean: {:.4f}  stdev {:.4f} \n".format(np.mean(np.array(thetaNresults[gi])),np.std(np.array(thetaNresults[gi]))) )
-        #     else:
-        #         f.write("\ttheta mean: {:.4f}  stdev {:.4f}\n".format(np.mean(np.array(thetaSresults[gi])),np.std(np.array(thetaSresults[gi]))) )
         f.close()            
 
 
 def parsecommandline():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-a",dest="datafilename",default=None,type=str,help="optional data file with simulated SFSs")    
     parser.add_argument("-d",dest="densityof2Ns",default = None,type=str,help="gamma or lognormal, only if simulating a distribution of Ns, else single values of Ns are used")
     parser.add_argument("-f",dest="dofolded",action="store_true",default=False,help="use folded SFS distribution")    
     parser.add_argument("-k",dest="ntrials",type = int, help="number of trials per parameter set", required=True)    
@@ -426,8 +379,12 @@ def parsecommandline():
     parser.add_argument("-q",dest="thetaS",type=float,help = "theta for selected sites",required=True)    
     parser.add_argument("-r",dest="doratioPRF",action="store_true",default=False,help="simulate Fisher-Wright RATIO, RATIOPRF")
     parser.add_argument("-s",dest="seed",type = int,help = " random number seed (positive integer)",default=1)
-    parser.add_argument("-t",dest="thetaN",type=float,help = "theta for neutral sites, optional, if -t is not specified then thetaN and thetaS are given by -q")
+    parser.add_argument("-t",dest="thetaN",type=float,help = "set theta for neutral sites, optional when -r is used, if -t is not specified then thetaN and thetaS are given by -q")
     parser.add_argument("-w",dest="use_watterson_thetaN",action="store_true",default=False,help="use watterson estimator for thetaN")   
+    parser.add_argument("-x",dest="gdensitymax",type=float,default=1.0,help = "maximum value of 2Ns density,  default is 1.0,  use with -d")
+    parser.add_argument("-z",dest="estimategmax",action="store_true",default=False,help="estimate the maximum of the density of 2Ns")
+
+
     args  =  parser.parse_args(sys.argv[1:])  
     if not (args.dobasicPRF or args.doratioPRF):
         parser.error('No action requested, add -p or -r')
@@ -441,6 +398,13 @@ def parsecommandline():
         if args.use_watterson_thetaN:
             parser.error('-w cannot be used with -p (basic PRF model)')
 
+    if args.densityof2Ns != None and not (args.densityof2Ns in ['lognormal','gamma']):
+        parser.error("-d term {} is not either 'lognormal' or 'gamma'".format(args.densityof2Ns))
+    if args.densityof2Ns== None and args.estimategmax:
+        parser.error("-z requires that a density function be specified (i.e. -d )")
+    if args.densityof2Ns== None and args.gdensitymax != 1.0:
+        parser.error("-x requires that a density function be specified (i.e. -d )")        
+    args.commandstring = " ".join(sys.argv[1:])
     return args
 
     # return parser

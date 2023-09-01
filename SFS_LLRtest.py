@@ -37,7 +37,7 @@ if dobasicPRF: # regular PRF LLR stuff
     numnegdeltas = 0
     #check chi^2 approximation of LLR for basic FW PRF 
     for i in range(ntrials):
-        sfs,sfsfolded = SFS_functions.simsfs(theta,g,n,None)
+        sfs,sfsfolded = SFS_functions.simsfs(theta,g,n,None,False)
         sfs = sfsfolded if dofolded else sfs
         thetastart = 100.0
         gstart = -1.0
@@ -68,7 +68,7 @@ if doratioPRF: #check chi^2 approximation of LLR for ratio of PRF, uses a single
     ratiothetacumobsv = []
     numnegdeltas = 0
     for i in range(ntrials):
-        nsfsfolded,ssfsfolded,ratios = SFS_functions.simsfsratio(theta,theta,n,None,dofolded,g=g)
+        nsfsfolded,ssfsfolded,ratios = SFS_functions.simsfsratio(theta,theta,1.0,n,None,dofolded,None,g,False)
         thetastart = 100.0
         gstart = -1.0
         ratiothetagresult =  minimize(SFS_functions.NegL_SFSRATIO_Theta_Ns,np.array([thetastart,gstart]),args=(n,dofolded,ratios,False),method="Powell",bounds=[(thetastart/10,thetastart*10),(10*gstart,-10*gstart)])

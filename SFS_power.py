@@ -39,7 +39,7 @@ if dobasicPRF:
     results = [[0]*len(pvalues) for i in range(len(gvals))] #results[i][j] has the count of significant results for gval[i] and pval[j]
     for gj,g in enumerate(gvals):
         for i in range(ntrialsperg):
-            sfs,sfsfolded = SFS_functions.simsfs(theta,g,n,None)
+            sfs,sfsfolded = SFS_functions.simsfs(theta,g,n,None, False)
             thetastart = 100.0
             gstart = -1.0
             thetagresult = minimize(SFS_functions.NegL_SFS_Theta_Ns,np.array([thetastart,gstart]),args=(n,dofolded,sfsfolded),method="Powell",bounds=[(thetastart/10,thetastart*10),(10*gstart,-10*gstart)])
@@ -67,7 +67,7 @@ if doratioPRF:
     results = [[0]*len(pvalues) for i in range(len(gvals))] #results[i][j] has the count of significant results for gval[i] and pval[j]
     for gj,g in enumerate(gvals):
         for i in range(ntrialsperg):
-            nsfsfolded,ssfsfolded,ratios = SFS_functions.simsfsratio(theta,theta,n, None, dofolded, g=g)
+            nsfsfolded,ssfsfolded,ratios = SFS_functions.simsfsratio(theta,theta,1.0,n, None, dofolded, None,g, False)
             thetastart = 100.0
             gstart = -1.0
             ratiothetagresult =  minimize(SFS_functions.NegL_SFSRATIO_Theta_Ns,np.array([thetastart,gstart]),args=(n,dofolded,ratios,False),method="Powell",bounds=[(thetastart/10,thetastart*10),(10*gstart,-10*gstart)])

@@ -50,7 +50,7 @@ if dobasicPRFROC:
         gvals_and_results.append([-np.random.random()*gmax,1]) # half the g=2Ns values are negative 
     for i in range(ntrials):
         g = gvals_and_results[i][0]
-        sfs,sfsfolded = SFS_functions.simsfs(theta,g,n,None)
+        sfs,sfsfolded = SFS_functions.simsfs(theta,g,n,None, False)
         thetastart = 100.0
         gstart = -1.0
         if dofolded:
@@ -102,7 +102,7 @@ if doratioPRFROC:
         gvals_and_results.append([-np.random.random()*gmax,1]) # half the g=2Ns values are negative 
     for i in range(ntrials):
         g = gvals_and_results[i][0]
-        nsfs,ssfs,ratios = SFS_functions.simsfsratio(theta,theta,n,None,dofolded,g=g)
+        nsfs,ssfs,ratios = SFS_functions.simsfsratio(theta,theta,1.0,n,None,dofolded,None,g,False)
         thetastart = 100.0
         gstart = -1.0
         ratiothetagresult =  minimize(SFS_functions.NegL_SFSRATIO_Theta_Ns,np.array([thetastart,gstart]),args=(n,dofolded,ratios,False),method="Powell",bounds=[(thetastart/10,thetastart*10),(10*gstart,-10*gstart)])

@@ -5,27 +5,22 @@
 """
 import numpy as np
 import  mpmath 
-#mpmath.hyp1f1() corresponds to mathematica Hypergeometric1F1 with variables in the same order
-#mpmath.coth() corresponds to mathematica Coth(),  hyperbolic cotangent 
-# turns out numpy.cosh()/numpy.sinh() is 10x faster than mpmath.coth 
-# and scipy.special.hyp1f1() is 10x faster than mpmath.hyp1f1()
 import math
 from scipy.optimize import minimize 
 import scipy
 from scipy.integrate import quad as quad 
 
-SSFconstant_dokuethe = False # if False then use the ratio probability function of Díaz-Francés, E. and F. J. Rubio, which works better 
+# as of 8/23/2023 Kuethe method does not work as well as that of  Díaz-Francés, E. and F. J. Rubio
+# if False then use the ratio probability function of Díaz-Francés, E. and F. J. Rubio, which works better 
+SSFconstant_dokuethe = False 
 
 import warnings
 # warnings.simplefilter('error')
-
 # Configure warnings to treat RuntimeWarning as an exception
 warnings.simplefilter("error", RuntimeWarning)
-
 def custom_warning_handler(message, category, filename, lineno, file=None, line=None):
     print("XXX",message,"\n", category,"\n",filename,"\n",lineno)
     raise category(message)
-
 # Register the custom warning filter
 warnings.showwarning = custom_warning_handler
 
@@ -40,7 +35,12 @@ warnings.showwarning = custom_warning_handler
 sqrt2 =pow(2,1/2)
 pi2r = np.sqrt(2 * np.pi)
 pidiv2r = np.sqrt(np.pi/2)
+
 g_xvals = np.concatenate([np.array([-1000,-500,-200,-100,-50,-40,-30,-20]),np.linspace(-19,-1.1,50),np.linspace(-1,0.99999,40)])
+
+def reset_g_xvals(gdensitymax):
+    global g_xvals
+    g_xvals = np.concatenate([np.array([-1000,-500,-200,-100,-50,-40,-30,-20]),np.linspace(-19,-1.1,50),np.linspace(-1,gdensitymax - 1e-5,40)])
 
 
 def coth(x):
@@ -153,33 +153,7 @@ def NegL_SFS_Theta_Ns(p,n,dofolded,counts):
             if theta <= 0:
                 return -math.inf
             g = p[1]
-            # tempc = coth(g)
-            # if tempc==1:
-            #     if dofolded:
-            #         us = theta*2*(n/(i*(n-i)))
-            #     else:
-            #         us = theta*(n/(i*(n-i)))
-            # if dofolded:
-            #     temph = scipy.special.hyp1f1(i,n,2*g)+scipy.special.hyp1f1(n-i,n,2*g)
-            #     us = theta*(n/(2*i*(n-i)))*(2 + 2*tempc +(1-tempc)*temph)
-            # else:
-            #     temph = scipy.special.hyp1f1(i,n,2*g)
-            #     us = theta*(n/(2*i*(n-i)))*(1 + tempc + (1-tempc)* temph)
-
-            tempc = coth(g)
-            if tempc==1:
-                if dofolded:
-                    us = theta*2*(n/(i*(n-i)))
-                else:
-                    us = theta*(n/(i*(n-i)))
-            if dofolded:
-                temph = scipy.special.hyp1f1(i,n,2*g)+scipy.special.hyp1f1(n-i,n,2*g)
-                us = theta*(n/(2*i*(n-i)))*(2 +2*tempc - (tempc-1)*temph)
-            else:
-                temph = scipy.special.hyp1f1(i,n,2*g)
-                us = theta*(n/(2*i*(n-i)))*(1 + tempc - (tempc-1)* temph)   
-
-
+            us = theta * prf_selection_weight(n,i,g,dofolded)
             temp = -us + math.log(us)*count - math.lgamma(count+1)
         return temp     
     assert(counts[0]==0)
@@ -188,76 +162,10 @@ def NegL_SFS_Theta_Ns(p,n,dofolded,counts):
         sum += L_SFS_Theta_Ns_bin_i(p,i,n,dofolded,counts[i])
     return -sum 
 
-## EXPERIMENTAL attempt at using a discrete distribution of g  - did not really work, not in use as of 8/10/23
-# def NegL_SFS_Theta_Nsdistribution(p,n,dofolded,counts):
-#     """
-#         for fisher wright poisson random field model 
-#         p is an array with 4 elements,  theta and then two Ns values, and then the proportion of mutations that have the first Ns value (1- this is the rest)
-#     """
-#     sum = 0
-#     theta = p[0]
-#     if theta <= 0 or p[1] > p[2] or p[3] <= 0.0 or p[3] >= 1.0:
-#         return -math.inf
-#     gvals = p[1:3]
-#     gprobs = np.array([p[3],1.0-p[3]])
-    
-#     for i in range(1,len(counts)):
-#         us = 0.0
-#         for j in range(2):
-#             g = gvals[j]
-#             if dofolded:
-#                 temph = scipy.special.hyp1f1(i,n,2*gvals[j])+scipy.special.hyp1f1(n-i,n,2*gvals[j])
-#                 tempc = coth(gvals[j])
-#                 us += theta*gprobs[j]*(n/(2*i*(n-i)))*(tempc-1)*(2*math.exp(2*gvals[j])-temph)
-#             else:
-#                 temph = scipy.special.hyp1f1(i,n,2*g)
-#                 tempc = coth(g)
-#                 us = theta*gprobs[j]*(n/(2*i*(i-n)))*(-1 - tempc + (tempc-1)* temph)                
-#         sum += -us + math.log(us)*counts[i] - math.lgamma(counts[i]+1)        
-#     return -sum
-
-## EXPERIMENTAL attempt at using a gaussian distribution of g, not in use as of 8/10/23
-# def NegL_SFS_Theta_Gaussian(p,n,dofolded,counts): 
-#     """
-#         for fisher wright poisson random field model 
-#         p is an array with 3 elements,  theta, mean and standard deviation of g
-#     """
-#     sum = 0
-#     theta = p[0]
-#     if theta <= 0 or p[2] <= 0.0:
-#         return -math.inf
-#     k = 100
-#     [gprobs,gvals] = gaussian_distribution_discrete(k, p[1],p[2])
-    
-    
-#     for i in range(1,len(counts)):
-#         us = 0.0
-#         for j in range(k):
-#             if dofolded:
-#                 temph = scipy.special.hyp1f1(i,n,2*gvals[j])+scipy.special.hyp1f1(n-i,n,2*gvals[j])
-#                 tempc = coth(gvals[j])
-#                 us += theta*gprobs[j]*(n/(2*i*(n-i)))*(tempc-1)*(2*math.exp(2*gvals[j])-temph)
-#             else:
-#                 temph = scipy.special.hyp1f1(i,n,2*gvals[j])
-#                 tempc = coth(gvals[j])
-#                 us += theta*gprobs[j]*(n/(2*i*(i-n)))*(-1 - tempc + (tempc-1)* temph)
-#         sum += -us + math.log(us)*counts[i] - math.lgamma(counts[i]+1)        
-#     return -sum
-
-def prfdensityfunction(g,n,i,arg1,arg2,densityFunction2Ns,dofolded):
+def prf_selection_weight(n,i,g,dofolded):
     """
-    returns the product of poisson random field weight for a given level of selection (g) and a probability density for g 
-    used for integrating over g 
+        Poisson random field selection weight for g=2Ns for bin i 
     """
-    # if dofolded:
-    #     temph = scipy.special.hyp1f1(i,n,2*g)+scipy.special.hyp1f1(n-i,n,2*g)
-    #     tempc = coth(g)
-    #     us = (n/(2*i*(i-n)))*(-2 - 2*tempc + (tempc-1)* temph)   
-    # else:
-    #     temph = scipy.special.hyp1f1(i,n,2*g)
-    #     tempc = coth(g)
-    #     us = (n/(2*i*(i-n)))*(-1 - tempc + (tempc-1)* temph)  
-    #         tempc = coth(g)
     tempc = coth(g)
     if tempc==1:
         if dofolded:
@@ -269,19 +177,25 @@ def prfdensityfunction(g,n,i,arg1,arg2,densityFunction2Ns,dofolded):
         us = (n/(2*i*(n-i)))*(2 +2*tempc - (tempc-1)*temph)
     else:
         temph = scipy.special.hyp1f1(i,n,2*g)
-        us = (n/(2*i*(n-i)))*(1 + tempc - (tempc-1)* temph)      
+        us = (n/(2*i*(n-i)))*(1 + tempc - (tempc-1)* temph)       
+    return us
 
-    if densityFunction2Ns=="lognormal":   
+def prfdensityfunction(g,n,i,arg1,arg2,gdm,densityof2Ns,dofolded):
+    """
+    returns the product of poisson random field weight for a given level of selection (g) and a probability density for g 
+    used for integrating over g 
+    
+    """
+    us = prf_selection_weight(n,i,g,dofolded)
+    if densityof2Ns=="lognormal":   
         mean = arg1
         std_dev = arg2
-        m = 1.0
-        x = float(m-g)
+        x = float(gdm-g)
         p = (1 / (x * std_dev * pi2r)) * np.exp(-(np.log(x)- mean)**2 / (2 * std_dev**2))
-    if densityFunction2Ns=="gamma":
+    if densityof2Ns=="gamma":
         alpha = arg1
         beta = arg2
-        m=1.0
-        x = float(m-g)
+        x = float(gdm-g)
         p = ((x**(alpha-1))*np.exp(-(x)/beta))/(math.gamma(alpha)*(beta**alpha))
     if p*us < 0.0:
         return 0.0
@@ -290,63 +204,463 @@ def prfdensityfunction(g,n,i,arg1,arg2,densityFunction2Ns,dofolded):
     if np.isnan(p):
         return(0.0)
     return p*us
+           
+def NegL_SFS_ThetaS_Ns_density(p,gdm,n,dofolded,densityof2Ns,counts):
+    """
+        likelihood for fisher wright poisson random field model 
+        uses a denisty for 2Ns
+        p is an array with 2 elements, alpha and beta if gamma density, and mean and stdev if lognormal,  gdm is  the shift term 
+    """
+    sum = 0
+    thetaS = p[0]
+    term1 = p[1]
+    term2 = p[2]
+    if thetaS <= 0: #theta can't be negative,  shape parameter can't be <= 1 else mode is at 0 
+        return -math.inf
+    k = 100
+    for i in range(1,len(counts)):
+        density_values = np.array([prfdensityfunction(x,n,i,term1,term2,gdm,densityof2Ns,dofolded) for x in g_xvals])
+        us=float(thetaS*np.trapz(density_values,g_xvals))
+        sum += -us + math.log(us)*counts[i] - math.lgamma(counts[i]+1)        
+    return -sum    
+ 
 
 
+def NegL_SFSRATIO_Theta_Ns(p,n,dofolded,zvals,nog):
+    """
+        returns the negative of the log of the likelihood for a list of ratios of selected over neutral counts 
+        the selected counts are generated using a single Ns value, not a distribution
+        calls L_SFSRATIO_Theta_Ns_bin_i()
+    """
+    def L_SFSRATIO_Theta_Ns_bin_i(p,i,n,dofolded,z,nog):
+        """
+            returns the negative of the log of the likelihood for the ratio of term i of the folded distributions (selected over neutral)
+            if nog then p contains only theta
+            there can be one or two theta values, if two, the first is thetaN and the second is thetaS
+        """
+        try:
+            if z==math.inf or z==0.0:
+                return 0.0
+            if nog:
+                if isinstance(p,float):
+                    if p <= 0.0:
+                        return -math.inf
+                    thetaN = thetaS = p
+                else:
+                    thetaN = p[0]
+                    thetaS = p[1]
+                    if thetaN <= 0.0 or thetaS <= 0.0:
+                        return -math.inf
+                ux = thetaS*n/(i*(n-i)) if dofolded else thetaS/i
+            else:
+                if len(p) == 2:
+                    thetaN = p[0]
+                    thetaS = p[0]
+                    g = p[1]
+                else:
+                    thetaN = p[0]
+                    thetaS = p[1]
+                    g = p[2]
+                ux = thetaS*prf_selection_weight(n,i,g,dofolded)
             
+            uy = thetaN*n/(i*(n-i)) if dofolded else thetaN/i     
+            alpha = ux/uy
+            sigmay = math.sqrt(uy)
+            beta = 1/sigmay
+            return logprobratio(alpha,beta,z)
 
-def NegL_SFS_Theta_Ns_Lognormal(p,n,dofolded,counts):
-    """
-        for fisher wright poisson random field model 
-        p is an array with 4 elements,  theta, mean and standard deviation of log[g] and the shift term 
-    """
+        except:
+            return -math.inf    
+    assert zvals[0]==0 or zvals[0] == math.inf
     sum = 0
-    theta = p[0]
-    if theta <= 0 : #theta can't be negative
-        return -math.inf
-    k = 100
-    [gprobs,gvals] = shifted_negative_lognormal_distribution_discrete(k, p[1],p[2])
-    for i in range(1,len(counts)):
-        us = 0.0
-        for j in range(k):
-            if dofolded:
-                temph = scipy.special.hyp1f1(i,n,2*gvals[j])+scipy.special.hyp1f1(n-i,n,2*gvals[j])
-                tempc = coth(gvals[j])
-                us += theta*gprobs[j]*(n/(2*i*(n-i)))*(tempc-1)*(2*math.exp(2*gvals[j])-temph)
-            else:
-                temph = scipy.special.hyp1f1(i,n,2*gvals[j])
-                tempc = coth(gvals[j])
-                us += theta*gprobs[j]*(n/(2*i*(i-n)))*(-1 - tempc + (tempc-1)* temph)
-        sum += -us + math.log(us)*counts[i] - math.lgamma(counts[i]+1)        
-    return -sum
+    for i in range(1,len(zvals)):
+        temp =  L_SFSRATIO_Theta_Ns_bin_i(p,i,n,dofolded,zvals[i],nog)
+        sum += temp
+        if sum==-math.inf:
+            break        
+    return -sum 
 
-def NegL_SFS_Theta_Ns_Gamma(p,n,dofolded,counts):
+def NegL_SFSRATIO_Theta_Ns_given_thetaN(p,n,thetaN,dofolded,zvals,nog):
     """
-        for fisher wright poisson random field model 
-        p is an array with 4 elements,  theta, mean and standard deviation of log[g] and the shift term 
+        uses thetaN estimated directly from snp count 
+        returns the negative of the log of the likelihood for a list of ratios of selected over neutral counts 
+        the selected counts are generated using a single Ns value, not a distribution
+        calls L_SFSRATIO_Theta_Ns_bin_i()
     """
+    def L_SFSRATIO_Theta_Ns_bin_i(p,i,n,dofolded,z,nog):
+        """
+            returns the negative of the log of the likelihood for the ratio of term i of the folded distributions (selected over neutral)
+            if nog then p contains only theta
+            there can be one or two theta values, if two, the first is thetaN and the second is thetaS
+        """
+        try:
+            if z==math.inf or z==0.0:
+                return 0.0
+            if nog:
+                thetaN = p[0]
+                thetaS = p[1]
+                if thetaN <= 0.0 or thetaS <= 0.0:
+                    return -math.inf
+                ux = thetaS*n/(i*(n-i)) if dofolded else thetaS/i
+            else:
+                thetaN = p[0]
+                thetaS = p[1]
+                g = p[2]
+                ux = thetaS*prf_selection_weight(n,i,g,dofolded)
+         
+            uy = thetaN*n/(i*(n-i)) if dofolded else thetaN/i     
+            alpha = ux/uy
+            sigmay = math.sqrt(uy)
+            beta = 1/sigmay
+            return logprobratio(alpha,beta,z)
+
+        except:
+            return -math.inf    
+    assert zvals[0]==0 or zvals[0] == math.inf
     sum = 0
-    theta = p[0]
-    shape = p[1]
-    scale = p[2]
-    if theta <= 0: #theta can't be negative,  shape parameter can't be <= 1 else mode is at 0 
-        return -math.inf
-    k = 100
-    [gprobs,gvals] = shifted_negative_gamma_distribution_discrete(k, shape,scale)
-    for i in range(1,len(counts)):
-        us = 0.0
-        for j in range(k):
-            if dofolded:
-                temph = scipy.special.hyp1f1(i,n,2*gvals[j])+scipy.special.hyp1f1(n-i,n,2*gvals[j])
-                tempc = coth(gvals[j])
-                us += theta*gprobs[j]*(n/(2*i*(n-i)))*(tempc-1)*(2*math.exp(2*gvals[j])-temph)
-            else:
-                temph = scipy.special.hyp1f1(i,n,2*gvals[j])
-                tempc = coth(gvals[j])
-                us += theta*gprobs[j]*(n/(2*i*(i-n)))*(-1 - tempc + (tempc-1)* temph)                
-        sum += -us + math.log(us)*counts[i] - math.lgamma(counts[i]+1)        
-    return -sum
+    p = list(p)
+    p.insert(0,thetaN)
+    for i in range(1,len(zvals)):
+        temp =  L_SFSRATIO_Theta_Ns_bin_i(p,i,n,dofolded,zvals[i],nog)
+        sum += temp
+        if sum==-math.inf:
+            break        
+    return -sum 
 
-# should be ok but not in use as of 8/10/23
+def NegL_SFSRATIO_Theta_Nsdensity(p,gdm,n,dofolded,densityof2Ns,zvals): 
+    """
+        returns the negative of the likelihood for the SFS ratio when a lognormal or gamma distribution is used
+        
+    """    
+    def L_SFSRATIO_Theta_Nsdensity_bin_i(p,i,gdm,n,dofolded,densityof2Ns,z):
+
+        try:
+            if z==math.inf or z==0.0:
+                return 0.0
+            if len(p) == 3: # just a single theta for for selected and neutral 
+                thetaN = p[0]
+                thetaS = p[0]
+                g = (p[1],p[2])
+            else:
+                thetaN = p[0]
+                thetaS = p[1]
+                g = (p[2],p[3])
+            density_values = np.array([prfdensityfunction(x,n,i,g[0],g[1],gdm,densityof2Ns,dofolded) for x in g_xvals])
+            ux=float(thetaS*np.trapz(density_values,g_xvals))
+            if ux<= 0.0:
+                return -math.inf
+               
+            uy = thetaN*n/(i*(n-i)) if dofolded else thetaN/i    
+            alpha = ux/uy
+            sigmay = math.sqrt(uy)
+            beta = 1/sigmay
+            return logprobratio(alpha,beta,z)             
+        except Exception as mistake:
+            print(mistake)
+            return -math.inf    
+    assert zvals[0]==0 or zvals[0] == math.inf
+    sum = 0
+    for i in range(1,len(zvals)):
+        temp =  L_SFSRATIO_Theta_Nsdensity_bin_i(p,i,gdm,n,dofolded,densityof2Ns,zvals[i])
+        sum += temp
+        if sum==-math.inf:
+            break        
+    return -sum         
+
+
+    
+# def NegL_SFSRATIO_Theta_Lognormal(p,gdm,n,dofolded,zvals): 
+#     """
+#         like L_SFSRATIO_Theta_Ns() but assumes numerator is the sum of a bunch of terms from a discretized lognormal 
+#         returns the negative of the log of the likelihood for the ratio of term i of the folded distributions (selected over neutral)
+#         there can be one or two theta values, if two, the first is thetaN and the second is thetaS
+#     """    
+#     def L_SFSRATIO_Theta_Lognormal_bin_i(p,i,gdm,n,dofolded,z):
+
+#         try:
+#             if z==math.inf or z==0.0:
+#                 return 0.0
+#             if len(p) == 3: # just a single theta for for selected and neutral 
+#                 thetaN = p[0]
+#                 thetaS = p[0]
+#                 g = (p[1],p[2])
+#             else:
+#                 thetaN = p[0]
+#                 thetaS = p[1]
+#                 g = (p[2],p[3])
+#             density_values = np.array([prfdensityfunction(x,n,i,g[0],g[1],gdm,"lognormal",dofolded) for x in g_xvals])
+#             ux=float(thetaS*np.trapz(density_values,g_xvals))
+#             if ux<= 0.0:
+#                 return -math.inf
+               
+#             uy = thetaN*n/(i*(n-i)) if dofolded else thetaN/i    
+#             alpha = ux/uy
+#             sigmay = math.sqrt(uy)
+#             beta = 1/sigmay
+#             return logprobratio(alpha,beta,z)             
+#         except Exception as mistake:
+#             print(mistake)
+#             return -math.inf    
+#     assert zvals[0]==0 or zvals[0] == math.inf
+#     sum = 0
+#     for i in range(1,len(zvals)):
+#         temp =  L_SFSRATIO_Theta_Lognormal_bin_i(p,i,gdm,n,dofolded,zvals[i])
+#         sum += temp
+#         if sum==-math.inf:
+#             break        
+#     return -sum         
+
+
+    
+# def NegL_SFSRATIO_Theta_Gamma(p,gdm,n,dofolded,zvals): 
+#     """
+#         like L_SFSRATIO_Theta_Ns but assumes numerator is the sum of a bunch of terms from a discretized lognormal 
+#         returns the negative of the log of the likelihood for the ratio of term i of the folded distributions (selected over neutral)
+#         there can be one or two theta values, if two, the first is thetaN and the second is thetaS
+#     """    
+#     def L_SFSRATIO_Theta_Gamma_bin_i(p,i,gdm,n,dofolded,z): 
+
+#         try:
+#             if z==math.inf or z==0.0:
+#                 return 0.0
+#             if len(p) == 3: # just a single theta for for selected and neutral 
+#                 thetaN = p[0]
+#                 thetaS = p[0]
+#                 g = (p[1],p[2])
+#             else:
+#                 thetaN = p[0]
+#                 thetaS = p[1]
+#                 g = (p[2],p[3])
+#             density_values = np.array([prfdensityfunction(x,n,i,g[0],g[1],gdm,"gamma",dofolded) for x in g_xvals])
+#             ux=float(thetaS*np.trapz(density_values,g_xvals))
+ 
+#             if ux<= 0.0:
+#                 return -math.inf    
+
+#             uy = thetaN*n/(i*(n-i)) if dofolded else thetaN/i   
+#             alpha = ux/uy
+#             sigmay = math.sqrt(uy)
+#             beta = 1/sigmay
+#             return logprobratio(alpha,beta,z)             
+#         except:
+#             return -math.inf    
+#     assert zvals[0]==0 or zvals[0] == math.inf
+#     sum = 0
+#     for i in range(1,len(zvals)):
+#         temp =  L_SFSRATIO_Theta_Gamma_bin_i(p,i,gdm,n,dofolded,zvals[i])
+#         sum += temp
+#         if sum==-math.inf:
+#             break
+#     return -sum   
+
+def NegL_SFSRATIO_Theta_Nsdensity_given_thetaN(p,gdm,n,thetaN,dofolded,densityof2Ns,zvals): 
+    """
+    uses thetaN estimated directly from snp count 
+    """
+    
+    def L_SFSRATIO_Theta_Nsdensity_bin_i(p,i,gdm,n,dofolded,densityof2Ns,z): 
+        try:
+            if z==math.inf or z==0.0:
+                return 0.0
+            thetaN = p[0]
+            thetaS = p[1]
+            g = (p[2],p[3])
+            density_values = np.array([prfdensityfunction(x,n,i,g[0],g[1],gdm,densityof2Ns,dofolded) for x in g_xvals])
+            sint = float(np.trapz(density_values,g_xvals))
+            ux=thetaS*sint                               
+            uy = thetaN*n/(i*(n-i)) if dofolded else thetaN/i     
+            alpha = ux/uy
+            sigmay = math.sqrt(uy)
+            beta = 1/sigmay
+            return logprobratio(alpha,beta,z)             
+        except:
+            return -math.inf 
+    assert zvals[0]==0 or zvals[0] == math.inf
+    p = list(p)
+    p.insert(0,thetaN)
+    sum = 0
+    for i in range(1,len(zvals)):
+        temp =  L_SFSRATIO_Theta_Nsdensity_bin_i(p,i,gdm,n,dofolded,densityof2Ns,zvals[i])
+        sum += temp
+    return -sum   
+
+
+
+# def NegL_SFSRATIO_Theta_Lognormal_given_thetaN(p,gdm,n,thetaN,dofolded,zvals): 
+#     """
+#     uses thetaN estimated directly from snp count 
+#     """
+#     m = 1.0
+#     def L_SFSRATIO_Theta_Lognormal_bin_i(p,i,gdm,n,dofolded,z): 
+#         try:
+#             if z==math.inf or z==0.0:
+#                 return 0.0
+#             thetaN = p[0]
+#             thetaS = p[1]
+#             g = (p[2],p[3])
+#             density_values = np.array([prfdensityfunction(x,n,i,g[0],g[1],gdm,"lognormal",dofolded) for x in g_xvals])
+#             sint = float(np.trapz(density_values,g_xvals))
+#             ux=thetaS*sint                               
+#             uy = thetaN*n/(i*(n-i)) if dofolded else thetaN/i     
+#             alpha = ux/uy
+#             sigmay = math.sqrt(uy)
+#             beta = 1/sigmay
+#             return logprobratio(alpha,beta,z)             
+#         except:
+#             return -math.inf 
+#     assert zvals[0]==0 or zvals[0] == math.inf
+#     p = list(p)
+#     p.insert(0,thetaN)
+#     sum = 0
+#     for i in range(1,len(zvals)):
+#         temp =  L_SFSRATIO_Theta_Lognormal_bin_i(p,i,gdm,n,dofolded,zvals[i])
+#         sum += temp
+#     return -sum   
+
+
+# def NegL_SFSRATIO_Theta_Gamma_given_thetaN(p,gdm,n,thetaN,dofolded,zvals): 
+#     """
+#         uses thetaN estiamted directly from snp count 
+#     """
+
+#     def L_SFSRATIO_Theta_Gamma_bin_i(p,i,gdm,n,dofolded,z): 
+#         try:
+#             if z==math.inf or z==0.0:
+#                 return 0.0
+#             thetaN = p[0]
+#             thetaS = p[1]
+#             g = (p[2],p[3])
+#             density_values = np.array([prfdensityfunction(x,n,i,g[0],g[1],gdm,"gamma",dofolded) for x in g_xvals])
+#             sint = float(np.trapz(density_values,g_xvals))
+#             ux=thetaS*sint                               
+#             uy = thetaN*n/(i*(n-i)) if dofolded else thetaN/i     
+#             alpha = ux/uy
+#             sigmay = math.sqrt(uy)
+#             beta = 1/sigmay
+#             return logprobratio(alpha,beta,z)             
+#         except:
+#             return -math.inf 
+#     assert zvals[0]==0 or zvals[0] == math.inf
+#     p = list(p)
+#     p.insert(0,thetaN)
+#     sum = 0
+#     for i in range(1,len(zvals)):
+#         temp =  L_SFSRATIO_Theta_Gamma_bin_i(p,i,gdm,n,dofolded,zvals[i])
+#         sum += temp
+#     return -sum   
+
+
+
+def simsfs_continuous_gdist(theta,gdm,n,maxi,gdist, params, returnexpected):
+    """
+    gdist is "lognormal" or "gamma" ,params is two values
+       
+    """
+    sfs = [0]*n
+    
+    for i in range(1,n):
+        density_values = np.array([prfdensityfunction(x,n,i,params[0],params[1],gdm,gdist,False) for x in g_xvals])
+        z = np.trapz(density_values,g_xvals)
+        sfsexp = theta*z
+        assert sfsexp>= 0
+        if returnexpected:
+            sfs[i] = sfsexp
+        else:
+            sfs[i] = np.random.poisson(sfsexp)
+    sfsfolded = [0]
+    for i in range(1,1+n//2):
+        # print(i,n-i,sfs[i],sfs[n-i])
+        sfsfolded.append(sfs[i]+sfs[n-i] if (n-i != i) else sfs[i])
+    if maxi:
+        assert maxi < n, "maxi setting is {} but n is {}".format(maxi,n)
+        sfs = sfs[:maxi+1]
+        sfsfolded = sfsfolded[:maxi+1]            
+    return sfs,sfsfolded
+
+def simsfs(theta,g,n,maxi, returnexpected):
+    """
+        if returnexpected,  use expected values, not simulated
+        generates,  folded and unfolded for Fisher Wright under Poisson Random Field
+    """
+    if g==0:
+        sfsexp = [0]+[theta/i for i in range(1,n)]
+    else:
+        sfsexp = [0]
+        for i in range(1,n):
+            u = prf_selection_weight(n,i,g,False)
+            sfsexp.append(u*theta)    
+    if returnexpected:
+        sfs = sfsexp
+    else:    
+        sfs = [np.random.poisson(expected) for expected in sfsexp]
+    sfsfolded = [0]
+    for i in range(1,1+n//2):
+        # print(i,n-i,sfs[i],sfs[n-i])
+        sfsfolded.append(sfs[i]+sfs[n-i] if (n-i != i) else sfs[i])
+    if maxi:
+        assert maxi < n, "maxi setting is {} but n is {}".format(maxi,n)
+        sfs = sfs[:maxi+1]
+        sfsfolded = sfsfolded[:maxi+1]            
+    return sfs,sfsfolded
+
+
+def simsfsratio(thetaN,thetaS,gdm,n,maxi,dofolded,gdist,params, returnexpected):
+    """
+    the ratio of selected SFS to neutral SFS
+    if returnexpected,  use expected values, not simulated
+    if gdist is None,  params is just a g value,  else it is a list of distribution parameters
+    if a bin of the neutral SFS ends up 0,  the program stops
+    """
+    
+    nsfs,nsfsfolded = simsfs(thetaN,0,n,maxi,returnexpected)
+    if gdist is None:
+        ssfs,ssfsfolded = simsfs(thetaS,params,n,maxi,returnexpected)
+    else:
+        ssfs,ssfsfolded = simsfs_continuous_gdist(thetaS,gdm,n,maxi,gdist,params,returnexpected)
+    ratios = [0]
+    if dofolded:
+        for i in range(1,len(nsfsfolded)):
+            # assert nsfsfolded[i], "nsfs {} is zero".format(i)
+            try:
+                ratios.append(ssfsfolded[i]/nsfsfolded[i])
+            except:
+                ratios.append(math.inf)
+    else:
+        for i in range(1,len(nsfs)):
+            try:
+                ratios.append(ssfs[i]/nsfs[i])
+            except:
+                ratios.append(math.inf)        
+    if dofolded:
+        return nsfsfolded,ssfsfolded,ratios
+    else:
+        return nsfs,ssfs,ratios
+
+#not in use as of 8/10/23
+# def watterson_L(n,maxi,dofolded,counts):
+#     """
+#         uses waterson's estimator of theta 
+#     """
+#     #counts begins with a 0
+#     # if folded the length is 1+n//2
+#     wterm = 0.0
+#     for i in range(1,n):
+#         wterm += 1/i
+#     thetaest = sum(counts)/wterm
+#     if dofolded==False:
+#         sumL = 0.0
+#         for i in range(1,n):
+#             un = thetaest/i
+#             sumL += -un + math.log(un)*counts[i] - math.lgamma(counts[i]+1)
+#         return thetaest,sumL
+#     else:
+#         sumL = 0.0
+#         for i in range(1,len(counts)):# len(counts) should be 1+n//2
+#             un = thetaest*n/(i*(n-i))
+#             sumL += -un + math.log(un)*counts[i] - math.lgamma(counts[i]+1)
+#     return thetaest,sumL
+
+# not in use as of 8/10/23
 # def NegL_2SFS_ThetaN_ThetaS_Ns(p,n,dofolded,nvals,svals,nog):
 #     """
 #         for two fisher wright sfs,  the first can have selection, the second is neutral
@@ -408,552 +722,35 @@ def NegL_SFS_Theta_Ns_Gamma(p,n,dofolded,counts):
         #     break
 #     return -sum 
 
-
-def NegL_SFSRATIO_Theta_Ns(p,n,dofolded,zvals,nog):
-    """
-        returns the negative of the log of the likelihood for a list of ratios of selected over neutral counts 
-        calls L_SFSRATIO_Theta_Ns_bin_i()
-    """
-    def L_SFSRATIO_Theta_Ns_bin_i(p,i,n,dofolded,z,nog):
-        """
-            returns the negative of the log of the likelihood for the ratio of term i of the folded distributions (selected over neutral)
-            if nog then p contains only theta
-            there can be one or two theta values, if two, the first is thetaN and the second is thetaS
-        """
-        try:
-            if z==math.inf or z==0.0:
-                return 0.0
-            if nog:
-                if isinstance(p,float):
-                    if p <= 0.0:
-                        return -math.inf
-                    thetaN = thetaS = p
-                else:
-                    thetaN = p[0]
-                    thetaS = p[1]
-                    if thetaN <= 0.0 or thetaS <= 0.0:
-                        return -math.inf
-                ux = thetaS*n/(i*(n-i)) if dofolded else thetaS/i
-            else:
-                if len(p) == 2:
-                    thetaN = p[0]
-                    thetaS = p[0]
-                    g = p[1]
-                else:
-                    thetaN = p[0]
-                    thetaS = p[1]
-                    g = p[2]
-                if dofolded:
-                    temph = scipy.special.hyp1f1(i,n,2*g)+scipy.special.hyp1f1(n-i,n,2*g)
-                    tempc = coth(g)
-                    ux = thetaS*(n/(2*i*(n-i)))*(tempc-1)*(2*math.exp(2*g)-temph)
-                else:
-                    temph = scipy.special.hyp1f1(i,n,2*g)
-                    tempc = coth(g)
-                    ux = thetaS*(n/(2*i*(i-n)))*(-1 - tempc + (tempc-1)* temph)                
-            uy = thetaN*n/(i*(n-i)) if dofolded else thetaN/i     
-            alpha = ux/uy
-            sigmay = math.sqrt(uy)
-            beta = 1/sigmay
-            return logprobratio(alpha,beta,z)
-
-        except:
-            return -math.inf    
-    assert zvals[0]==0 or zvals[0] == math.inf
-    sum = 0
-    for i in range(1,len(zvals)):
-        temp =  L_SFSRATIO_Theta_Ns_bin_i(p,i,n,dofolded,zvals[i],nog)
-        sum += temp
-        if sum==-math.inf:
-            break        
-    return -sum 
-
-    
-def NegL_SFSRATIO_Theta_Lognormal(p,n,dofolded,zvals): 
-    """
-        like L_SFSRATIO_Theta_Ns() but assumes numerator is the sum of a bunch of terms from a discretized lognormal 
-        returns the negative of the log of the likelihood for the ratio of term i of the folded distributions (selected over neutral)
-        there can be one or two theta values, if two, the first is thetaN and the second is thetaS
-    """    
-    def L_SFSRATIO_Theta_Lognormal_bin_i(p,i,n,dofolded,z):
-
-        try:
-            if z==math.inf or z==0.0:
-                return 0.0
-            if len(p) == 3: # just a single theta for for selected and neutral 
-                thetaN = p[0]
-                thetaS = p[0]
-                g = (p[1],p[2])
-            else:
-                thetaN = p[0]
-                thetaS = p[1]
-                g = (p[2],p[3])
-            density_values = np.array([prfdensityfunction(x,n,i,g[0],g[1],"lognormal",dofolded) for x in g_xvals])
-            ux=float(thetaS*np.trapz(density_values,g_xvals))
-            if ux<= 0.0:
-                return -math.inf
-               
-            uy = thetaN*n/(i*(n-i)) if dofolded else thetaN/i    
-            alpha = ux/uy
-            sigmay = math.sqrt(uy)
-            beta = 1/sigmay
-            return logprobratio(alpha,beta,z)             
-        except Exception as mistake:
-            print(mistake)
-            return -math.inf    
-    assert zvals[0]==0 or zvals[0] == math.inf
-    sum = 0
-    for i in range(1,len(zvals)):
-        temp =  L_SFSRATIO_Theta_Lognormal_bin_i(p,i,n,dofolded,zvals[i])
-        sum += temp
-        if sum==-math.inf:
-            break        
-    return -sum         
-
-
-    
-def NegL_SFSRATIO_Theta_Gamma(p,n,dofolded,zvals): 
-    """
-        like L_SFSRATIO_Theta_Ns but assumes numerator is the sum of a bunch of terms from a discretized lognormal 
-        returns the negative of the log of the likelihood for the ratio of term i of the folded distributions (selected over neutral)
-        there can be one or two theta values, if two, the first is thetaN and the second is thetaS
-    """    
-    def L_SFSRATIO_Theta_Gamma_bin_i(p,i,n,dofolded,z): 
-
-        try:
-            if z==math.inf or z==0.0:
-                return 0.0
-            if len(p) == 3: # just a single theta for for selected and neutral 
-                thetaN = p[0]
-                thetaS = p[0]
-                g = (p[1],p[2])
-            else:
-                thetaN = p[0]
-                thetaS = p[1]
-                g = (p[2],p[3])
-            density_values = np.array([prfdensityfunction(x,n,i,g[0],g[1],"gamma",dofolded) for x in g_xvals])
-            ux=float(thetaS*np.trapz(density_values,g_xvals))
- 
-            if ux<= 0.0:
-                return -math.inf    
-
-            uy = thetaN*n/(i*(n-i)) if dofolded else thetaN/i   
-            alpha = ux/uy
-            sigmay = math.sqrt(uy)
-            beta = 1/sigmay
-            return logprobratio(alpha,beta,z)             
-        except:
-            return -math.inf    
-    assert zvals[0]==0 or zvals[0] == math.inf
-    sum = 0
-    for i in range(1,len(zvals)):
-        temp =  L_SFSRATIO_Theta_Gamma_bin_i(p,i,n,dofolded,zvals[i])
-        sum += temp
-        if sum==-math.inf:
-            break
-    return -sum   
-
-# experimental - tried estimating thetaN when there are two thetas and distribution terms,  has not been useful as of 8/10/23 
-def estimate_thetaN(p,n,countratio,dofolded):
-    p = list(p)
-    thetaS = p[0]
-    g = (p[1],p[2])
-    sumsint=0.0
-    uy = 0.0
-    for i in range(1,n):
-        density_values = np.array([prfdensityfunction(x,n,i,g[0],g[1],"gamma",dofolded) for x in g_xvals])
-        sumsint += float(np.trapz(density_values,g_xvals))
-        if dofolded:
-            uy += n/(i*(n-i)) 
-        else:
-            uy += 1/i         
-    thetaN = (sumsint/uy)*countratio*thetaS
-    return thetaN    
-
-
-def NegL_SFSRATIO_Theta_Lognormal_given_thetaN(p,n,thetaN,dofolded,zvals): 
-    """
-    uses thetaN estimated directly from snp count 
-    """
-
-    def L_SFSRATIO_Theta_Lognormal_bin_i(p,i,n,dofolded,z): 
-        try:
-            if z==math.inf or z==0.0:
-                return 0.0
-            thetaN = p[0]
-            thetaS = p[1]
-            g = (p[2],p[3])
-            density_values = np.array([prfdensityfunction(x,n,i,g[0],g[1],"lognormal",dofolded) for x in g_xvals])
-            sint = float(np.trapz(density_values,g_xvals))
-            ux=thetaS*sint                               
-            uy = thetaN*n/(i*(n-i)) if dofolded else thetaN/i     
-            alpha = ux/uy
-            sigmay = math.sqrt(uy)
-            beta = 1/sigmay
-            return logprobratio(alpha,beta,z)             
-        except:
-            return -math.inf 
-    assert zvals[0]==0 or zvals[0] == math.inf
-    p = list(p)
-    p.insert(0,thetaN)
-    sum = 0
-    for i in range(1,len(zvals)):
-        temp =  L_SFSRATIO_Theta_Lognormal_bin_i(p,i,n,dofolded,zvals[i])
-        sum += temp
-    return -sum   
-
-
-def NegL_SFSRATIO_Theta_Gamma_given_thetaN(p,n,thetaN,dofolded,zvals): 
-    """
-        uses thetaN estiamted directly from snp count 
-    """
-
-    def L_SFSRATIO_Theta_Gamma_bin_i(p,i,n,dofolded,z): 
-        try:
-            if z==math.inf or z==0.0:
-                return 0.0
-            thetaN = p[0]
-            thetaS = p[1]
-            g = (p[2],p[3])
-            density_values = np.array([prfdensityfunction(x,n,i,g[0],g[1],"gamma",dofolded) for x in g_xvals])
-            sint = float(np.trapz(density_values,g_xvals))
-            ux=thetaS*sint                               
-            uy = thetaN*n/(i*(n-i)) if dofolded else thetaN/i     
-            alpha = ux/uy
-            sigmay = math.sqrt(uy)
-            beta = 1/sigmay
-            return logprobratio(alpha,beta,z)             
-        except:
-            return -math.inf 
-    assert zvals[0]==0 or zvals[0] == math.inf
-    p = list(p)
-    p.insert(0,thetaN)
-    sum = 0
-    for i in range(1,len(zvals)):
-        temp =  L_SFSRATIO_Theta_Gamma_bin_i(p,i,n,dofolded,zvals[i])
-        sum += temp
-    return -sum   
-
-def NegL_SFSRATIO_Theta_given_thetaN(p,n,thetaN,dofolded,zvals): 
-    """
-        uses thetaN estiamted directly from snp count 
-    """
-
-    def L_SFSRATIO_Theta_Gamma_bin_i(p,i,n,dofolded,z): 
-        try:
-            if z==math.inf or z==0.0:
-                return 0.0
-            thetaN = p[0]
-            thetaS = p[1]
-            g = (p[2],p[3])
-            density_values = np.array([prfdensityfunction(x,n,i,g[0],g[1],"gamma",dofolded) for x in g_xvals])
-            sint = float(np.trapz(density_values,g_xvals))
-            ux=thetaS*sint                               
-            uy = thetaN*n/(i*(n-i)) if dofolded else thetaN/i     
-            alpha = ux/uy
-            sigmay = math.sqrt(uy)
-            beta = 1/sigmay
-            return logprobratio(alpha,beta,z)             
-        except:
-            return -math.inf 
-    assert zvals[0]==0 or zvals[0] == math.inf
-    p = list(p)
-    p.insert(0,thetaN)
-    sum = 0
-    for i in range(1,len(zvals)):
-        temp =  L_SFSRATIO_Theta_Gamma_bin_i(p,i,n,dofolded,zvals[i])
-        sum += temp
-    return -sum       
-
 #experimental,  calls estimate_thetaN(), has not been useful as of 8/10/23
-def NegL_SFSRATIO_Theta_Gamma_EX(p,n,countratio,dofolded,zvals): 
-    """
-        countratio is the ratio of total neutral counts divided by total selected counts 
-    """
+# def NegL_SFSRATIO_Theta_Gamma_EX(p,n,countratio,dofolded,zvals): 
+#     """
+#         countratio is the ratio of total neutral counts divided by total selected counts 
+#     """
 
-    def L_SFSRATIO_Theta_Gamma_bin_i(p,i,n,dofolded,z): 
-        try:
-            if z==math.inf or z==0.0:
-                return 0.0
-            thetaN = p[0]
-            thetaS = p[1]
-            g = (p[2],p[3])
-            density_values = np.array([prfdensityfunction(x,n,i,g[0],g[1],"gamma",dofolded) for x in g_xvals])
-            sint = float(np.trapz(density_values,g_xvals))
-            ux=thetaS*sint                               
-            uy = thetaN*n/(i*(n-i)) if dofolded else thetaN/i       
-            alpha = ux/uy
-            sigmay = math.sqrt(uy)
-            beta = 1/sigmay
-            return logprobratio(alpha,beta,z)             
-        except:
-            return -math.inf 
-    assert zvals[0]==0 or zvals[0] == math.inf
-    thetaN = estimate_thetaN(p,n,countratio,dofolded)
-    p = list(p)
-    p.insert(0,thetaN)
-    sum = 0
-    for i in range(1,len(zvals)):
-        temp =  L_SFSRATIO_Theta_Gamma_bin_i(p,i,n,dofolded,zvals[i])
-        sum += temp
-    return -sum   
-
-
-def shifted_negative_lognormal_distribution_discrete(k, mean,std_dev): # do not pass shift 
-    # Define the range of x-values for a lognormal distribution that is flipped (negative) and then shifted to the right by a constant 
-    shift = 1
-    x_min = -20
-    x_max = shift
-
-    # Calculate the spacing between intervals
-    interval_width = (x_max - x_min) / (k - 1)
-    # Generate evenly spaced x-values representing the midpoints of intervals
-    x_values = np.linspace(x_min + interval_width / 2, x_max - interval_width / 2, k)
-    alt_x_values = shift -x_values
-    # Calculate probabilities using Gaussian function on the alt_x_values
-    probabilities = (1 / ((alt_x_values) * std_dev * np.sqrt(2 * np.pi))) * np.exp(-(np.log(alt_x_values)- mean)**2 / (2 * std_dev**2))
-    # Normalize probabilities so that they sum to 1
-    probabilities /= np.sum(probabilities)
-    # print(probabilities)
-    return [list(probabilities), list(x_values)]
-
-def shifted_negative_gamma_distribution_discrete_alt(k,shape,scale): # do not pass shift 
-    # Define the range of x-values for a lognormal distribution that is flipped (negative) and then shifted to the right by a constant 
-    # sample 4 very negative values at wide intervals,  with constant intervals for the rest of the range 
-    assert  k >= 10  
-    shift = 1
-    lowintervals=[-10000,-1000,-100,-50,-20]
-    widths = [lowintervals[i]-lowintervals[i-1] for i in range(1,len(lowintervals))]
-    x_values = [(lowintervals[i]+lowintervals[i-1])/2 for i in range(1,len(lowintervals))]
-    k -=4
-    x_min = -20
-    x_max = shift
-    alpha = shape
-    beta = scale
-    # Calculate the spacing between intervals
-    interval_width = (x_max - x_min) / (k - 1)
-    temp = np.empty(k)
-    temp.fill(interval_width)
-    widths = np.concatenate((np.array(widths,dtype=float),temp))
-    # Generate evenly spaced x-values representing the midpoints of intervals
-    x_values = np.concatenate((np.array(x_values),np.linspace(x_min + interval_width / 2, x_max - interval_width / 2, k)))
-    alt_x_values = shift -x_values
-    # Calculate probabilities using Gaussian function on the alt_x_values
-    probabilities = ((alt_x_values**(alpha-1))*np.exp(-(alt_x_values)/beta))/(math.gamma(alpha)*(beta**alpha))
-    # Normalize probabilities so that they sum to 1
-    areas = probabilities * widths 
-    probabilities  = areas / np.sum(areas)
-    # print(probabilities)
-    return [list(probabilities), list(x_values)]
-
-def shifted_negative_gamma_distribution_discrete(k,shape,scale): # do not pass shift 
-    # Define the range of x-values for a lognormal distribution that is flipped (negative) and then shifted to the right by a constant 
-    # sample 4 very negative values at wide intervals,  with constant intervals for the rest of the range 
-    shift = 1
-    x_min = -20
-    x_max = shift
-    alpha = shape
-    beta = scale
-    # Calculate the spacing between intervals
-    interval_width = (x_max - x_min) / (k - 1)
-    # Generate evenly spaced x-values representing the midpoints of intervals
-    x_values = np.linspace(x_min + interval_width / 2, x_max - interval_width / 2, k)
-    alt_x_values = shift -x_values
-    # Calculate probabilities using Gaussian function on the alt_x_values
-    probabilities = ((alt_x_values**(alpha-1))*np.exp(-(alt_x_values)/beta))/(math.gamma(alpha)*(beta**alpha))
-    # Normalize probabilities so that they sum to 1
-    probabilities /= np.sum(probabilities)
-    # print(probabilities)
-    return [list(probabilities), list(x_values)]
-
-# not in use as of 8/10/23
-def gaussian_distribution_discrete(k, mean, std_dev):
-    # Define the range of x-values
-    x_min = mean - 4 * std_dev
-    x_max = mean + 4 * std_dev
-    # Calculate the spacing between intervals
-    interval_width = (x_max - x_min) / (k - 1)
-    # Generate evenly spaced x-values representing the midpoints of intervals
-    x_values = np.linspace(x_min + interval_width / 2, x_max - interval_width / 2, k)
-    # Calculate probabilities using Gaussian function
-    probabilities = (1 / (std_dev * np.sqrt(2 * np.pi))) * np.exp(-(x_values - mean)**2 / (2 * std_dev**2))
-    # Normalize probabilities so that they sum to 1
-    probabilities /= np.sum(probabilities)
-    # print(probabilities)
-    return [list(probabilities), list(x_values)]
-
-def gamma_distribution_discrete(k, shape, scale):
-    # Define the range of x-values
-    from scipy.stats import gamma
-    x_min = 0
-    x_max = gamma.ppf(0.99, shape, scale=scale)  # 99th percentile as upper bound
-    # Calculate the spacing between intervals
-    interval_width = (x_max - x_min) / (k - 1)
-    # Generate evenly spaced x-values representing the midpoints of intervals
-    x_values = np.linspace(x_min + interval_width / 2, x_max - interval_width / 2, k)
-    # Calculate probabilities using Gamma probability density function
-    probabilities = gamma.pdf(x_values, shape, scale=scale)
-    # Normalize probabilities so that they sum to 1
-    probabilities /= np.sum(probabilities)
-    return [list(probabilities), list(x_values)]
-    
-def simsfs_gdist(theta,n,maxi,gdist = None, gaussian = None, gamma = None, lognormal = None):
-    """
-        simulates sfs,  folded and unfolded for Fisher Wright under Poisson Random Field
-        either gdist, or gaussian or gamma must be used
-        if gdist is given, 
-            uses a discrete probability distribution for Ns as given in gdist 
-            gdist is a 2d list, gdist[1][j] is the selection coefficient with probability g[1][j]
-        if gaussian is given,  then variable gaussian is an array with mean and standard deviation
-        if gamma is given then the variable gamma is an array with shape and scale 
-        if lognormal is given then the variable is a shifted negative lognormal with array [mean, standard deviation, shift]
-        
-    """
-
-    
-    if gaussian:
-        [gprobs,gvals] = gaussian_distribution_discrete(100,gaussian[0],gaussian[1])
-    elif gamma:
-        [gprobs,gvals] = shifted_negative_gamma_distribution_discrete(100,gamma[0],gamma[1])
-    elif lognormal:
-        [gprobs,gvals] = shifted_negative_lognormal_distribution_discrete(100,lognormal[0],lognormal[1])
-        # [gprobs,gvals] = shifted_negative_lognormal_distribution_discrete(50,lognormal[0],lognormal[1],lognormal[2])
-
-    else:
-        assert gdist is not None
-        gvals = gdist[0]
-        gprobs = gdist[1]
-
-    sfs = [0]*n
-    for j in range(len(gvals)):
-        for i in range(1,n):
-            temph = scipy.special.hyp1f1(i,n,2*gvals[j])
-            tempc = coth(gvals[j])
-            u = theta*(n/(2*i*(i-n)))*(-1 - tempc + (-1 + tempc)*temph)
-            sfsexp  = u*gprobs[j]
-            if sfsexp > 0.0:
-                sfs[i] += np.random.poisson(sfsexp)
-    sfsfolded = [0]
-    for i in range(1,1+n//2):
-        # print(i,n-i,sfs[i],sfs[n-i])
-        sfsfolded.append(sfs[i]+sfs[n-i] if (n-i != i) else sfs[i])
-    if maxi:
-        assert maxi < n, "maxi setting is {} but n is {}".format(maxi,n)
-        sfs = sfs[:maxi+1]
-        sfsfolded = sfsfolded[:maxi+1]            
-    return sfs,sfsfolded
-
-def simsfs_continuous_gdist(theta,n,maxi,gdist = None, gaussian = None, gamma = None, lognormal = None):
-    """
-       
-    """
-    sfs = [0]*n
-    
-    for i in range(1,n):
-        if lognormal != None:
-            density_values = np.array([prfdensityfunction(x,n,i,lognormal[0],lognormal[1],"lognormal",False) for x in g_xvals])
-        if gamma != None:
-            density_values = np.array([prfdensityfunction(x,n,i,gamma[0],gamma[1],"gamma",False) for x in g_xvals])
-      
-        z = np.trapz(density_values,g_xvals)
-        # if gamma != None:
-        #     quadargs = (n,i,gamma[0],gamma[1],"gamma",False)
-        #     quadresult = quad(prfdensityfunction,-1000,1.0,args=quadargs)
-        #     z = quadresult[0]       
-        sfsexp = theta*z
-        assert sfsexp>= 0
-        sfs[i] = np.random.poisson(sfsexp)
-    sfsfolded = [0]
-    for i in range(1,1+n//2):
-        # print(i,n-i,sfs[i],sfs[n-i])
-        sfsfolded.append(sfs[i]+sfs[n-i] if (n-i != i) else sfs[i])
-    if maxi:
-        assert maxi < n, "maxi setting is {} but n is {}".format(maxi,n)
-        sfs = sfs[:maxi+1]
-        sfsfolded = sfsfolded[:maxi+1]            
-    return sfs,sfsfolded
-
-def simsfs(theta,g,n,maxi):
-    """
-        simulates sfs,  folded and unfolded for Fisher Wright under Poisson Random Field
-    """
-    if g==0:
-        sfsexp = [0]+[theta/i for i in range(1,n)]
-    else:
-        sfsexp = [0]
-        for i in range(1,n):
-            temph = scipy.special.hyp1f1(i,n,2*g)
-            tempc = coth(g)
-            u = theta*(n/(2*i*(i-n)))*(-1 - tempc + (-1 + tempc)*temph)
-            sfsexp.append(u)        
-    sfs = [np.random.poisson(expected) for expected in sfsexp]
-    sfsfolded = [0]
-    for i in range(1,1+n//2):
-        # print(i,n-i,sfs[i],sfs[n-i])
-        sfsfolded.append(sfs[i]+sfs[n-i] if (n-i != i) else sfs[i])
-    if maxi:
-        assert maxi < n, "maxi setting is {} but n is {}".format(maxi,n)
-        sfs = sfs[:maxi+1]
-        sfsfolded = sfsfolded[:maxi+1]            
-    return sfs,sfsfolded
-
-
-def simsfsratio(thetaN,thetaS,n,maxi,dofolded,g=None,distribution=None):
-    """
-    simulate the ratio of selected SFS to neutral SFS
-    if distribution is None,  g is just a g value,  else it is a list of distribution parameters
-    if a bin of the neutral SFS ends up 0,  the program stops
-    """
-    
-    nsfs,nsfsfolded = simsfs(thetaN,0,n,maxi)
-    if distribution=="lognormal": #g has two values in it 
-        ssfs,ssfsfolded = simsfs_continuous_gdist(thetaS,n,maxi,lognormal = g)
-        # ssfs,ssfsfolded = simsfs_gdist(thetaS,n,maxi,lognormal = g)
-    elif distribution=="gamma":
-        ssfs,ssfsfolded = simsfs_continuous_gdist(thetaS,n,maxi,gamma = g)
-        # ssfs,ssfsfolded = simsfs_gdist(thetaS,n,maxi,gamma = g)
-    else:
-        ssfs,ssfsfolded = simsfs(thetaS,g,n,maxi)
-    ratios = [0]
-    if dofolded:
-        for i in range(1,len(nsfsfolded)):
-            # assert nsfsfolded[i], "nsfs {} is zero".format(i)
-            try:
-                ratios.append(ssfsfolded[i]/nsfsfolded[i])
-            except:
-                ratios.append(math.inf)
-    else:
-        for i in range(1,len(nsfs)):
-            try:
-                ratios.append(ssfs[i]/nsfs[i])
-            except:
-                ratios.append(math.inf)        
-    if dofolded:
-        return nsfsfolded,ssfsfolded,ratios
-    else:
-        return nsfs,ssfs,ratios
-
-#not in use as of 8/10/23
-def watterson_L(n,maxi,dofolded,counts):
-    """
-        uses waterson's estimator of theta 
-    """
-    #counts begins with a 0
-    # if folded the length is 1+n//2
-    wterm = 0.0
-    for i in range(1,n):
-        wterm += 1/i
-    thetaest = sum(counts)/wterm
-    if dofolded==False:
-        sumL = 0.0
-        for i in range(1,n):
-            un = thetaest/i
-            sumL += -un + math.log(un)*counts[i] - math.lgamma(counts[i]+1)
-        return thetaest,sumL
-    else:
-        sumL = 0.0
-        for i in range(1,len(counts)):# len(counts) should be 1+n//2
-            un = thetaest*n/(i*(n-i))
-            sumL += -un + math.log(un)*counts[i] - math.lgamma(counts[i]+1)
-    return thetaest,sumL
-
+#     def L_SFSRATIO_Theta_Gamma_bin_i(p,i,n,dofolded,z): 
+#         try:
+#             if z==math.inf or z==0.0:
+#                 return 0.0
+#             thetaN = p[0]
+#             thetaS = p[1]
+#             g = (p[2],p[3])
+#             density_values = np.array([prfdensityfunction(x,n,i,g[0],g[1],"gamma",dofolded) for x in g_xvals])
+#             sint = float(np.trapz(density_values,g_xvals))
+#             ux=thetaS*sint                               
+#             uy = thetaN*n/(i*(n-i)) if dofolded else thetaN/i       
+#             alpha = ux/uy
+#             sigmay = math.sqrt(uy)
+#             beta = 1/sigmay
+#             return logprobratio(alpha,beta,z)             
+#         except:
+#             return -math.inf 
+#     assert zvals[0]==0 or zvals[0] == math.inf
+#     thetaN = estimate_thetaN(p,n,countratio,dofolded)
+#     p = list(p)
+#     p.insert(0,thetaN)
+#     sum = 0
+#     for i in range(1,len(zvals)):
+#         temp =  L_SFSRATIO_Theta_Gamma_bin_i(p,i,n,dofolded,zvals[i])
+#         sum += temp
+#     return -sum   
