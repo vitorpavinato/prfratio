@@ -51,7 +51,7 @@ function (*)fsfs(o<Subpopulation>$ subpop, o<MutationType>$ mutType, i$ sampleSi
 
 function (void)writeSFS(i sfs, s$ basename, s$ path)
 {
-    writeFile(filePath=paste0(path + "/" + basename + ".txt"), contents = paste(sfs), append=T);
+    writeFile(filePath=paste0(path + "/" + basename + ".txt"), contents = paste(sfs), append=F);
 } 
 
 

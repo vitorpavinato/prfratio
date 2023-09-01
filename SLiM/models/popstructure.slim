@@ -1,14 +1,14 @@
 // usage: 
-// slim -s <SEED> -d simu=<sim number> -d MU=<MU RATE> -d R=<R RATE> -d N=<POPSIZE> \
-//      -d L=<CHR LENGTH> -d Ns=<NS>
+// slim -s <SEED> -d simu=<sim number> -d MU=<MU RATE> -d R=<R RATE> \
+//      -d N=<POPSIZE> -d L=<CHR LENGTH> -d Ns=<NS> -d n=<SAMPLE SIZE> \
 //      -d intronL=<INTRON LENGTH> -d exonL=<EXON LENGTH> \
-//      -d n=<SAMPLE SIZE> -d basename=<NAME> -d o=<OUTPUT DIR>  
+//      -d o=<OUTPUT DIR>  models/popstructure.slim
 
 // set up a simple neutral simulation
 initialize() {
 	
 	// UPLOAD FUNCTIONS - THIS DOES NOT CHANGE
-	source("/Users/tur92196/WorkDir/prfratio/SLiM/src/slim_fun.eidos");
+	source("/Users/tur92196/WorkDir/prfratio/slim/src/slim_fun.eidos");
 	
 	// FOR DEBUGGING ONLY
    //defineGlobal("seed", 123456);
@@ -18,14 +18,11 @@ initialize() {
 	//defineGlobal("N", 1000);
 	//defineGlobal("L", 10000);
 	//defineGlobal("Ns", -0.02);
-	//defineGlobal("dist", "fixed")
-	//defineGlobal("distpars", "10.0-1.0")
 	defineGlobal("intronL", 810); // at this point, it doesn't matter the size 
 	defineGlobal("exonL", 324);
 	//defineGlobal("n", 40);
-   //defineGlobal("outDir", "/Users/tur92196/WorkDir/prfratio/SLiM/results/prfratio/popstructure/-0.02"); // change this to a working dir when testing ouput
-	//defineGlobal("outDir", "results/prfratio/popstructure/-0.02"); // change this to a working dir when testing ouput	
-	//defineGlobal("model", "popstructure");
+   //defineGlobal("outDir", "/Users/tur92196/WorkDir/prfratio/SLiM/results/prfratio/popstructure/fixed/-0.02"); // change this to a working dir when testing ouput
+	//defineGlobal("outDir", "results/prfratio/popstructure/fixed/-0.02"); // change this to a working dir when testing ouput	
 	
 	// FOR DEBUGGING
 	// Track pedigree
@@ -33,6 +30,7 @@ initialize() {
 	
 	// Arguments are parsed from command line
 	//setSeed(seed);
+	defineGlobal("basename", paste0(simu + "_" + getSeed())); // This is for the simplified output file naming
 	initializeMutationRate(MU);
 	initializeMutationType("m1", 0.5, "f", 0.0);     // neutral mutations in introns
 	initializeMutationType("m2", 0.5, "f", Ns/N);    // non-neutral mutations in exons; Ns/N to get s from Ns
@@ -78,7 +76,7 @@ initialize() {
 	//p0.setValue("previous_N", p0.individualCount);
 	//
 	// Create a log file to track changes in population size for debugging only
-   //log = community.createLogFile(paste0(outDir + "/" + model + "_" + Ns + "_" + simu + "_Ne_log.csv"), logInterval=1);
+   //log = community.createLogFile(paste0(outDir + "/" + basename + "_Ne_log.csv"), logInterval=1);
 	//log.addCycle();
 	//log.addCustomColumn("N(t-1)", "p0.getValue('previous_N');");
 	//log.addCustomColumn("N(t)", "p0.individualCount;");
@@ -134,16 +132,11 @@ initialize() {
 	 print(m2fsfs);
 	 print("\n");
 	 print(Ns);
-	
+	 
 	 // Save FSFSs to a file:
-	if (dist != "fixed") {
-		writeSFS(m1fsfs, paste0(model + "_" + dist + "_" + distpars + "_" + simu + "_sfs_neutral"), outDir);
-		writeSFS(m2fsfs, paste0(model + "_" + dist + "_" + distpars + "_" + simu + "_sfs_selected"), outDir);
+	 writeSFS(m1fsfs, paste0("sfs_neutral_" + basename), outDir);
+	 writeSFS(m2fsfs, paste0("sfs_selected_" + basename), outDir);
 	
-	} else {
-		writeSFS(m1fsfs, paste0(model + "_" + dist + "_" + Ns + "_" + simu + "_sfs_neutral"), outDir);
-		writeSFS(m2fsfs, paste0(model + "_" + dist + "_" + Ns + "_" + simu + "_sfs_selected"), outDir);
-	}
     /////REMOVE?    
     //m1pooledsfs = twoPopPooledfsfs(p0, p1, m1, ngenes1, ngenes2, F);
 	 //m2pooledsfs = twoPopPooledfsfs(p0, p1, m2, ngenes1, ngenes2, F);
@@ -153,8 +146,8 @@ initialize() {
 	 //print(m2pooledsfs);
 	
 	 // Save FSFSs to a file:
-	 //writeSFS(m1pooledsfs, paste0(model + "_" + Ns + "_" + simu + "_sfs_neutral"), outDir);
-	 //writeSFS(m2pooledsfs, paste0(model + "_" + Ns + "_" + simu + "_sfs_selected"), outDir); 
+	 //writeSFS(m1pooledsfs, paste0("sfs_neutral_" + basename), outDir);
+	 //writeSFS(m2pooledsfs, paste0("sfs_selected_" + basename), outDir); 
 	
 	 sim.simulationFinished();
 }
