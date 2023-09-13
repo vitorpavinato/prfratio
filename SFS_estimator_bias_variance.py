@@ -43,6 +43,7 @@ from scipy.stats import chi2
 import SFS_functions
 import math
 import argparse
+import simulate_SFS_withSLiM as slim
 # import warnings
 # warnings.filterwarnings("ignore")
 
@@ -52,6 +53,8 @@ import argparse
 # else:
 #     optimizemethod="Nelder-Mead"
 optimizemethod="Powell"
+
+np.seterr(divide='ignore', invalid='ignore')
 
 def makeSFScomparisonstring(headers,sfslist):
     slist = []
@@ -110,6 +113,17 @@ def run(args):
         SFS_functions.reset_g_xvals(gdm)
 
     n = args.n
+
+    # Additional parameters for SLiM
+    simuslim = args.simuslim
+    model = args.model
+    mu = args.mu
+    rec = args.rec
+    popSize = args.popSize
+    seqLen = args.seqLen
+    nSeqs = args.nSeqs
+    parent_dir = args.parent_dir
+    savefile = args.savefile
     
     if args.thetaN:
         thetaN = args.thetaN
@@ -156,7 +170,14 @@ def run(args):
                 
             for i in range(ntrialsperg):
                 if densityof2Ns:
-                    sfs,sfsfolded =  SFS_functions.simsfs_continuous_gdist(thetaS,gdm,n,args.maxi,densityof2Ns,(g[0],g[1]),False)  
+                    if simuslim:
+                        sims_csfs_neutral, sfsfolded, sims_csfs_ratio, sims_nss, sims_seeds = slim.simulateSFSslim(nsimulations = 1, mu = mu, rec = rec, popSize = popSize, seqLen = seqLen, 
+                                                                                                                   nsdist = densityof2Ns, nsdistargs = g, sampleSize = int(n/2), model = model, 
+                                                                                                                   nSeqs =nSeqs, parent_dir = parent_dir, savefile = savefile)
+
+                    else:    
+                        sfs,sfsfolded =  SFS_functions.simsfs_continuous_gdist(thetaS,gdm,n,args.maxi,densityof2Ns,(g[0],g[1]),False)  
+                    
                     startarray = [thetastart,gdensitystart[0],gdensitystart[1]]
                     boundsarray = [(thetastart/10,thetastart*10),(0.01,10),(0.01,10)]  
                     
@@ -165,7 +186,14 @@ def run(args):
                     SFScompareheaders = ["Params:{} {} Trial#{}:".format(g[0],g[1],i+1),"sim","fit"]
                     sfsfit,sfsfoldedfit =  SFS_functions.simsfs_continuous_gdist(thetaSresults[gi][-1],gdm,n,args.maxi,densityof2Ns,(ln1results[gi][-1],ln2results[gi][-1]),True)  
                 else:
-                    sfs,sfsfolded = SFS_functions.simsfs(thetaS,g,n,args.maxi,False)
+                    if simuslim:
+                        sims_csfs_neutral, sfsfolded, sims_csfs_ratio, sims_nss, sims_seeds = slim.simulateSFSslim(nsimulations = 1, mu = mu, rec = rec, popSize = popSize, seqLen = seqLen, 
+                                                                                                                   ns = g, nsdist = "fixed", sampleSize = int(n/2), model = model, 
+                                                                                                                   nSeqs = nSeqs, parent_dir = parent_dir, savefile = savefile)
+
+                    else:
+                        sfs,sfsfolded = SFS_functions.simsfs(thetaS,g,n,args.maxi,False)
+                    
                     thetastart = 100.0
                     gstart = -1.0
                     boundsarray = [(thetastart/10,thetastart*10),(15*gstart,-15*gstart)]  
@@ -258,7 +286,13 @@ def run(args):
                 thetastart = 200
                 if densityof2Ns:
                     SFScompareheaders = ["Params:{} {} Trial#{}:".format(g[0],g[1],i+1),"Nsim","Ssim","Ratiosim","Nfit","Sfit","Ratiofit"]
-                    nsfs,ssfs,ratios =  SFS_functions.simsfsratio(thetaN,thetaS,gdm,n,args.maxi,dofolded,densityof2Ns,g,False) 
+                    if simuslim:
+                        nsfs, ssfs, ratios, sims_nss, sims_seeds = slim.simulateSFSslim(nsimulations = 1, mu = mu, rec = rec, popSize = popSize, seqLen = seqLen, 
+                                                                                        nsdist = densityof2Ns, nsdistargs = g, sampleSize = int(n/2), model = model, 
+                                                                                        nSeqs = nSeqs, parent_dir = parent_dir, savefile = savefile)
+
+                    else:
+                        nsfs,ssfs,ratios =  SFS_functions.simsfsratio(thetaN,thetaS,gdm,n,args.maxi,dofolded,densityof2Ns,g,False) 
                     if args.use_watterson_thetaN:
                         thetaNest = sum(nsfs)/sum([1/i for i in range(1,n)]) # this should work whether or not the sfs is folded 
                         boundsarray = [(thetastart/10,thetastart*10),(0.01,10),(0.01,10)]          
@@ -275,7 +309,13 @@ def run(args):
                     SFScomparesultsstrings.append(makeSFScomparisonstring(SFScompareheaders,[nsfs,ssfs,ratios,fitnsfs,fitssfs,fitratios]))
                 else:
                     SFScompareheaders = ["Param:{} Trial#{}:".format(g,i+1),"Nsim","Ssim","Ratiosim","Nfit","Sfit","Ratiofit"]
-                    nsfs,ssfs,ratios =  SFS_functions.simsfsratio(thetaN,thetaS,gdm,n,args.maxi,dofolded,None,g,False)
+                    if simuslim:
+                        nsfs, ssfs, ratios, sims_nss, sims_seeds = slim.simulateSFSslim(nsimulations = 1, mu = mu, rec = rec, popSize = popSize, seqLen = seqLen, 
+                                                                                        ns = g, nsdist = "fixed", sampleSize = int(n/2), model = model, 
+                                                                                        nSeqs = nSeqs, parent_dir = parent_dir, savefile = savefile)
+                        
+                    else:
+                        nsfs,ssfs,ratios =  SFS_functions.simsfsratio(thetaN,thetaS,gdm,n,args.maxi,dofolded,None,g,False)
                     thetastart = 100.0
                     gstart = -1.0
                     if args.use_watterson_thetaN:
@@ -383,8 +423,16 @@ def parsecommandline():
     parser.add_argument("-w",dest="use_watterson_thetaN",action="store_true",default=False,help="use watterson estimator for thetaN")   
     parser.add_argument("-x",dest="gdensitymax",type=float,default=1.0,help = "maximum value of 2Ns density,  default is 1.0,  use with -d")
     parser.add_argument("-z",dest="estimategmax",action="store_true",default=False,help="estimate the maximum of the density of 2Ns")
-
-
+    parser.add_argument("-slim",dest="simuslim",action="store_true",default=False, help="simulate SFSs with SLiM")
+    parser.add_argument("-model",dest="model", type=str, default= "constant", help="The demographic model to simulate SFSs")
+    parser.add_argument("-U", dest="mu", type=float, default=1e-6/4, help="Per site mutation rate per generation")
+    parser.add_argument("-R", dest="rec", type=float, default=1e-6/4, help="Per site recombination rate per generation")
+    parser.add_argument("-N", dest="popSize", default=1000, type=int, help="Population census size")
+    parser.add_argument("-L", dest="seqLen", default=10000, type=int, help="Sequence length")
+    parser.add_argument("-G", dest="nSeqs", type=int, help="Number of sequences")
+    parser.add_argument("-W", dest="parent_dir",default = "results/slim",type = str, help="Path for working directory")
+    parser.add_argument("-S", dest="savefile",action="store_true", default=False,help="Save simulated SFS to a file")
+    
     args  =  parser.parse_args(sys.argv[1:])  
     if not (args.dobasicPRF or args.doratioPRF):
         parser.error('No action requested, add -p or -r')

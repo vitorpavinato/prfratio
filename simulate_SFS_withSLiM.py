@@ -7,6 +7,9 @@ import shlex, subprocess
 import numpy as np
 import math
 
+# This might fix the RuntimeWarning with np.divide
+np.seterr(divide='ignore', invalid='ignore')
+
 #---FUNCTION DEFINITION---#
 
 # Function to read one SFS from a file
@@ -22,7 +25,7 @@ def readSFS(file):
     return sfs
 
 # Function to run SLiM as a external process
-def runSlim(simulation, mu, rec, popSize, seqLen, ns, sampleSize, model, outdir, cleandir = False):
+def runSlim(simulation, mu, rec, popSize, seqLen, ns, sampleSize, model, outdir, cleandir = True):
     # Path to SLiM
     slim = "/usr/local/bin/slim"
     models = "/Users/tur92196/WorkDir/prfratio/SLiM/models"
@@ -32,8 +35,8 @@ def runSlim(simulation, mu, rec, popSize, seqLen, ns, sampleSize, model, outdir,
     #                 "iexpansion": "Instantaeous expansion model",
     #                 "ibottlneck": "Instantaneous bottleneck model",
     #                 "popstructure": "Constant size, population structure model",
-    #                 "popstructure2N": "N/2 population size after split, population structure model",
-    #                 "Gravel2011OOA": "Gravel et al. 2011 Out-of-Africa Human demography model"}
+    #                 "popstructureN2": "N/2 population size after split, population structure model",
+    #                 "OOAgravel2011": "Gravel et al. 2011 Out-of-Africa Human demography model"}
     
     # if model in avail_models:
     #         print("Ok, " + avail_models.get(model) + " is available!")
@@ -43,6 +46,7 @@ def runSlim(simulation, mu, rec, popSize, seqLen, ns, sampleSize, model, outdir,
 
     # Sample a seed every function call
     seed = str(int(np.random.uniform(low=100000000, high=900000000)))
+    #seed = str(123456) # debugging only
     
     # Run SLiM as a python subprocess
     run = subprocess.run([slim, "-s", seed, "-d", ("simu="+str(simulation)), "-d", ("MU="+str(mu)), "-d", ("R="+str(rec)),
@@ -71,12 +75,12 @@ def combineSFSs(sfslist, nbins):
             csfs[bi] += bin
     return csfs
 
-def writecombinedSFS(file, header, csfs):
-    with open(file, 'a') as f:
+def writeCombinedSFS(file, header, csfs):
+    with open(file, 'w') as f:
         f.write(header + "\n")
         wr = csv.writer(f, delimiter=" ")
         wr.writerows(csfs)
-    
+   
 # Function to combine individuals SFSs in a file (each one in a row) ## NEED to FIX it
 def readANDcombineSFSs(sampleSize, filename, path):
     
@@ -93,11 +97,25 @@ def readANDcombineSFSs(sampleSize, filename, path):
                 pass
     return csfs
 
+# Function to sample 2Ns from a distribution
+# def sample2nsfromdist(dist, par1, par2):
+#     if nsdist == "lognormal":
+#         while True:
+#             ns = 1 - np.random.lognormal(par1, par2)
+#             if ns >= -1000:
+#                 break
+#     if nsdist == "gamma":
+#         while True:
+#             ns = 1 - np.random.gamma(par1, par2)
+#             if ns >= 1000:
+#                 break
+#     return ns
+
 # Define the command line arguments
 # def parseargs():
 #     parser = argparse.ArgumentParser("python run_slim.py",formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 #     parser.add_argument("-r", help="number of simulations",
-#                         dest="nsimulations", default = 3, type=int)
+#                         dest="nsimulations", type=int, required=True)
 #     parser.add_argument("-U", help="Per site mutation rate per generation",
 #                         dest="mu", default=1e-6/4, type=float)
 #     parser.add_argument("-R", help="Per site recombination rate per generation",
@@ -107,7 +125,7 @@ def readANDcombineSFSs(sampleSize, filename, path):
 #     parser.add_argument("-L", help="Sequence length",
 #                         dest="seqLen", default=10000, type=int)
 #     parser.add_argument("-f", help="Number of sequences",
-#                         dest="nSeqs", default=5, type=int)
+#                         dest="nSeqs", type=int, required=True)
 #     parser.add_argument("-d", help="Set a distribution for Ns",
 #                         dest="nsdist", default="fixed", type=str)
 #     parser.add_argument("-g", help="Non-synonymous population selection coefficient, 2Ns (Slim uses 1-(2Ns/2N))",
@@ -155,12 +173,12 @@ def simulateSFSslim(nsimulations = 3, mu = 1e-6/4, rec = 1e-6/4, popSize = 1000,
     # popSize = 1000
     # seqLen = 10000
     # ns = 0.0
-    # nsdist = "fixed"
-    # nsdistargs = [0.0, 0.0]
+    # nsdist = "lognormal"
+    # nsdistargs = [0.3, 0.6]
     # sampleSize = 40
     # model = "constant"
     # nSeqs = 5
-    # parent_dir = "results/prfratio"
+    # parent_dir = "results/slim"
     # savefile = True
     
     # nsimulations = args.nsimulations
@@ -195,8 +213,8 @@ def simulateSFSslim(nsimulations = 3, mu = 1e-6/4, rec = 1e-6/4, popSize = 1000,
                     "iexpansion": "Instantaeous expansion model",
                     "ibottleneck": "Instantaneous bottleneck model",
                     "popstructure": "Constant size, population structure model",
-                    "popstructure2N": "N/2 population size after split, population structure model",
-                    "Gravel2011OOA": "Gravel et al. 2011 Out-of-Africa Human demography model"}
+                    "popstructureN2": "N/2 population size after split, population structure model",
+                    "OOAgravel2011": "Gravel et al. 2011 Out-of-Africa Human demography model"}
     
     if model in avail_models:
             print("Ok, " + avail_models.get(model) + " is available!")
@@ -211,6 +229,8 @@ def simulateSFSslim(nsimulations = 3, mu = 1e-6/4, rec = 1e-6/4, popSize = 1000,
         thetaNeutral = thetaNeutral/10
     if model == "iexpansion":
         thetaNeutral = thetaNeutral * 10
+    if model == "OOAgravel2011":
+        thetaNeutral = thetaNeutral * 99.067
     
     # Selected theta
     thetaSelected = (4*popSize*mu)*exon_totalL*nSeqs
@@ -218,6 +238,8 @@ def simulateSFSslim(nsimulations = 3, mu = 1e-6/4, rec = 1e-6/4, popSize = 1000,
         thetaSelected = thetaSelected /10
     if model == "iexpansion":
         thetaSelected  = thetaSelected * 10
+    if model == "OOAgravel2011":
+        thetaSelected = thetaSelected * 99.067
 
     # Second, check if the distribution exists
     # and if parameters are correct!
@@ -256,19 +278,8 @@ def simulateSFSslim(nsimulations = 3, mu = 1e-6/4, rec = 1e-6/4, popSize = 1000,
     if not os.path.exists(path):
         os.makedirs(path)
 
-    # These lists collects the each simulation (combined) SFS and lists of seeds and ns
-    # for each gene/fragment/subsimulation
-    sims_seeds = []
-    sims_nss = []
-    sims_csfs_neutral = []
-    sims_csfs_selected = []
-    sims_csfs_ratio = []
-
-    # Run many replicates
-    for i in range(0,nsimulations):
-        simulation = i
+    if nsimulations == 1:
         simulation = 1
-        # These lists collects the output produced by each simulated gene/fragment/subsimulation
         list_nss = []
         list_neutral_sfss = []
         list_selected_sfss = []
@@ -287,16 +298,13 @@ def simulateSFSslim(nsimulations = 3, mu = 1e-6/4, rec = 1e-6/4, popSize = 1000,
             if nsdist == "gamma":
                 while True:
                     ns = 1 - np.random.gamma(nsdistargs[0], nsdistargs[1])
-                    if ns >= 1000:
+                    if ns >= -1000:
                         break
                 list_nss.append(ns)
             else:
                 list_nss.append(ns)
             
-            seed, neutral_sfs, selected_sfs = runSlim(simulation = simulation, 
-                                                      mu = mu, rec = rec, popSize = popSize, seqLen = seqLen,
-                                                      ns=ns, sampleSize = sampleSize, 
-                                                      model = model, outdir = path, cleandir = False) 
+            seed, neutral_sfs, selected_sfs = runSlim(simulation=simulation,mu=mu,rec=rec,popSize=popSize,seqLen=seqLen,ns=ns,sampleSize=sampleSize,model=model,outdir=path,cleandir=True) 
             
             list_neutral_sfss.append(neutral_sfs)
             list_selected_sfss.append(selected_sfs)
@@ -306,28 +314,105 @@ def simulateSFSslim(nsimulations = 3, mu = 1e-6/4, rec = 1e-6/4, popSize = 1000,
 
         csfs_neutral = combineSFSs(list_neutral_sfss, nbins=sampleSize)
         csfs_selected = combineSFSs(list_selected_sfss, nbins=sampleSize)
-        
-        # calculate the ration
+
+        # calculate the ratio
         csfs_ratio = np.divide(csfs_selected, csfs_neutral).tolist()
         csfs_ratio = [0 if math.isnan(x) else x for x in csfs_ratio]
         
-        # Create a list of outputs (one for each simulation)
-        sims_csfs_neutral.append(csfs_neutral)
-        sims_csfs_selected.append(csfs_selected)
-        sims_csfs_ratio.append(csfs_ratio)
-        sims_nss.append(list_nss)
-        sims_seeds.append(list_seeds)
-    
-    # Write files containing the combined SFS 
-    # One SFS for each simulation (that is a collection of subsimulations)
-    if savefile:
-        # Define the output file for the combined SFS(s):
-        sims_csfs_neutralfile = (path + "/" + "csfs_neutral.txt")
-        sims_csfs_selectedfile = (path + "/" + "csfs_selected.txt")
-        writecombinedSFS(sims_csfs_neutralfile, header_neutral, sims_csfs_neutral)
-        writecombinedSFS(sims_csfs_selectedfile, header_selected, sims_csfs_selected)
+        # insert 0 to the 0-bin
+        csfs_neutral.insert(0,0) 
+        csfs_selected.insert(0,0) 
+        csfs_ratio.insert(0,0)
 
-    return sims_csfs_neutral, sims_csfs_selected, sims_csfs_ratio, sims_nss, sims_seeds
+        # Write files containing the combined SFS 
+        # One SFS for each simulation (that is a collection of subsimulations)
+        if savefile:
+            sim_csfs_neutral = []
+            sim_csfs_selected = []
+            sim_csfs_neutral.append(csfs_neutral)
+            sim_csfs_selected.append(csfs_selected)
+            # Define the output file for the combined SFS(s):
+            sims_csfs_neutralfile = (path + "/" + "csfs_neutral.txt")
+            sims_csfs_selectedfile = (path + "/" + "csfs_selected.txt")
+            writeCombinedSFS(sims_csfs_neutralfile, header_neutral, sim_csfs_neutral)
+            writeCombinedSFS(sims_csfs_selectedfile, header_selected, sim_csfs_selected)
+
+        return csfs_neutral, csfs_selected, csfs_ratio, list_nss, list_seeds
+    else: 
+
+        # These lists collects the each simulation (combined) SFS and lists of seeds and ns
+        # for each gene/fragment/subsimulation
+        sims_seeds = []
+        sims_nss = []
+        sims_csfs_neutral = []
+        sims_csfs_selected = []
+        sims_csfs_ratio = []
+
+        # Run many replicates
+        for i in range(0,nsimulations):
+            simulation = i
+            # These lists collects the output produced by each simulated gene/fragment/subsimulation
+            list_nss = []
+            list_neutral_sfss = []
+            list_selected_sfss = []
+            list_seeds = []
+
+            j = 0
+            while j < nSeqs:
+
+                # Select Ns (or s) from a distribution
+                if nsdist == "lognormal":
+                    while True:
+                        ns = 1 - np.random.lognormal(nsdistargs[0], nsdistargs[1])
+                        if ns >= -1000:
+                            break
+                    list_nss.append(ns) 
+                if nsdist == "gamma":
+                    while True:
+                        ns = 1 - np.random.gamma(nsdistargs[0], nsdistargs[1])
+                        if ns >= -1000:
+                            break
+                    list_nss.append(ns)
+                else:
+                    list_nss.append(ns)
+                
+                seed, neutral_sfs, selected_sfs = runSlim(simulation=simulation,mu=mu,rec=rec,popSize=popSize,seqLen=seqLen,ns=ns,sampleSize=sampleSize,model=model,outdir=path,cleandir=True) 
+                
+                list_neutral_sfss.append(neutral_sfs)
+                list_selected_sfss.append(selected_sfs)
+                list_seeds.append(seed)
+
+                j += 1
+
+            csfs_neutral = combineSFSs(list_neutral_sfss, nbins=sampleSize)
+            csfs_selected = combineSFSs(list_selected_sfss, nbins=sampleSize)
+
+            # calculate the ratio
+            csfs_ratio = np.divide(csfs_selected, csfs_neutral).tolist()
+            csfs_ratio = [0 if math.isnan(x) else x for x in csfs_ratio]
+            
+            # insert 0 to the 0-bin
+            csfs_neutral.insert(0,0)
+            csfs_selected.insert(0,0)
+            csfs_ratio.insert(0,0)
+            
+            # Create a list of outputs (one for each simulation)
+            sims_csfs_neutral.append(csfs_neutral)
+            sims_csfs_selected.append(csfs_selected)
+            sims_csfs_ratio.append(csfs_ratio)
+            sims_nss.append(list_nss)
+            sims_seeds.append(list_seeds)
+    
+        # Write files containing the combined SFS 
+        # One SFS for each simulation (that is a collection of subsimulations)
+        if savefile:
+            # Define the output file for the combined SFS(s):
+            sims_csfs_neutralfile = (path + "/" + "csfs_neutral.txt")
+            sims_csfs_selectedfile = (path + "/" + "csfs_selected.txt")
+            writeCombinedSFS(sims_csfs_neutralfile, header_neutral, sims_csfs_neutral)
+            writeCombinedSFS(sims_csfs_selectedfile, header_selected, sims_csfs_selected)
+
+        return sims_csfs_neutral, sims_csfs_selected, sims_csfs_ratio, sims_nss, sims_seeds
 
 # if __name__ == "__main__":
 
