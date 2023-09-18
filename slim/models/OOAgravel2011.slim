@@ -2,7 +2,9 @@
 // slim -s <SEED> -d simu=<sim number> -d MU=<MU RATE> -d R=<R RATE> \
 //      -d N=<POPSIZE> -d L=<CHR LENGTH> -d Ns=<NS> -d n=<SAMPLE SIZE> \
 //      -d intronL=<INTRON LENGTH> -d exonL=<EXON LENGTH> \
-//      -d o=<OUTPUT DIR>  models/OOAgravel2011.slim  
+//      -d o=<OUTPUT DIR>  models/OOAgravel2011.slim
+
+//NEED TO PARSE SCALED N, MU AND R INTO COMMAND LINE FUNCTION 
 
 // set up a simple neutral simulation
 initialize() {
@@ -11,28 +13,31 @@ initialize() {
 	source("/Users/tur92196/WorkDir/prfratio/slim/src/slim_fun.eidos");
 	
 	// FOR DEBUGGING ONLY
-   //defineGlobal("seed", 123456);
+	//defineGlobal("seed", 123456);
 	//defineGlobal("simu", 1);
 	//defineGlobal("MU", (1e-6/4));
 	//defineGlobal("R", (1e-6/4));
-   
-   // Population sizes not scaled
-   //defineGlobal("N", 7310);               // Ancestral African population size of 7310 (p1)
-   defineGlobal("NAfr", 14474);   		   // First population size after burn-in )p1)
-   defineGlobal("NEur1", 1861);  		   // SPLIT Eurasians (p2) from Africans (p1)	
-   defineGlobal("NEAs", 554);   		   	// SPLIT p2 into European (p2) and East Asian (p3) subpopulations
-   defineGlobal("NEur2", 1032);  	      // REDUCE Eurasian population size (p2)
+	
+	// SCALING FACTOR
+	defineGlobal("sf", 10);
+	
+	// Population sizes not scaled
+	//defineGlobal("N", 7310);                       // Ancestral African population size of 7310 (p1)
+	defineGlobal("NAfr", integerDiv(14474, sf));   // First population size after burn-in )p1)
+	defineGlobal("NEur1",integerDiv(1861, sf));    // SPLIT Eurasians (p2) from Africans (p1)	
+	defineGlobal("NEAs", integerDiv(554, sf));     // SPLIT p2 into European (p2) and East Asian (p3) subpopulations
+	defineGlobal("NEur2",integerDiv(1032,sf));  	  // REDUCE Eurasian population size (p2)
 	//defineGlobal("L", 10000);
 	//defineGlobal("Ns", -0.02);
 	defineGlobal("intronL", 810); // at this point, it doesn't matter the size 
 	defineGlobal("exonL", 324);
 	//defineGlobal("n", 40);
-   //defineGlobal("outDir", "/Users/tur92196/WorkDir/prfratio/SLiM/results/prfratio/OOAgravel2011/fixed/-0.02"); // change this to a working dir when testing ouput
+	//defineGlobal("outDir", "/Users/tur92196/WorkDir/prfratio/SLiM/results/prfratio/OOAgravel2011/fixed/-0.02"); // change this to a working dir when testing ouput
 	//defineGlobal("outDir", "results/prfratio/OOAgravel2011/fixed/-0.02"); // change this to a working dir when testing ouput	
 	
 	// FOR DEBUGGING
 	// Track pedigree
-   //initializeSLiMOptions(keepPedigrees=T);
+	//initializeSLiMOptions(keepPedigrees=T);
 	
 	// Arguments are parsed from command line
 	//setSeed(seed);
@@ -40,32 +45,32 @@ initialize() {
 	initializeMutationRate(MU);
 	initializeMutationType("m1", 0.5, "f", 0.0);     // neutral mutations in introns
 	initializeMutationType("m2", 0.5, "f", Ns/N);   // non-neutral mutations in exons; Ns/Na to get s from Ns. This sets s[a] for N[a].
-   m1.convertToSubstitution = F;
+	m1.convertToSubstitution = F;
 	m2.convertToSubstitution = F;
 	
-	initializeGenomicElementType("g1", m1, 1);       
-	initializeGenomicElementType("g2", m2, 1);       
+	initializeGenomicElementType("g1", m1, 1);
+	initializeGenomicElementType("g2", m2, 1);
 	
 	//	Generates intron/exons pairs programatically
 	base=0;
-	while (base < L) {    
-	    
-       if ((L-1) - base < (intronL + exonL)){
-           
-           // Make one intron to fill the remaning gap  
-		     initializeGenomicElement(g1, base, (base + ((L-1) - base)));
-       
-       }	else {
-           // Make one intron & exon pair   
-		     initializeGenomicElement(g1, base, (base + intronL - 1));
-		 
-		     //exon_length = exonL;
-		     initializeGenomicElement(g2, (base + intronL), (base + intronL + exonL - 1));
-       
-       }    
-	    
-	    // Update base length
-       base = base + intronL + exonL;	
+	while (base < L) {
+		
+		if ((L-1) - base < (intronL + exonL)){
+			
+			// Make one intron to fill the remaning gap  
+			initializeGenomicElement(g1, base, (base + ((L-1) - base)));
+		
+		}	else {
+			// Make one intron & exon pair   
+			initializeGenomicElement(g1, base, (base + intronL - 1));
+			
+			//exon_length = exonL;
+			initializeGenomicElement(g2, (base + intronL), (base + intronL + exonL - 1));
+		
+		}
+		
+		// Update base length
+		base = base + intronL + exonL;
 	}// end of while
 	
 	
@@ -76,13 +81,13 @@ initialize() {
 
 // Create a population of size N individuals
 1 late() {
-	sim.addSubpop("p1", N);
+	sim.addSubpop("p1", integerDiv(N));
 	
 	// DEBUGGING ONLY
 	//p0.setValue("previous_N", p0.individualCount);
 	//
 	// Create a log file to track changes in population size for debugging only
-   //log = community.createLogFile(paste0(outDir + "/" + model + "_" + Ns + "_" + simu + "_Ne_log.csv"), logInterval=1);
+	//log = community.createLogFile(paste0(outDir + "/" + model + "_" + Ns + "_" + simu + "_Ne_log.csv"), logInterval=1);
 	//log.addCycle();
 	//log.addCustomColumn("N(t-1)", "p0.getValue('previous_N');");
 	//log.addCustomColumn("N(t)", "p0.individualCount;");
@@ -100,25 +105,29 @@ initialize() {
 // This occurs (5919.131117 generations)*(25 years)=147978 yr ago; paper rounds to 5920 gens (148000 yr)
 // Thus, simulation should end at generation 1+73104+5919.131117=79024
 // After burn-in, population increases to N1 = 14474
-73105 early() { p1.setSubpopulationSize(NAfr); }
+//73105 early() { p1.setSubpopulationSize(NAfr); }
+7310 early() { p1.setSubpopulationSize(NAfr); }
 
-73105:79024 early(){
+//73105:79024 early(){
+7310:7902 early(){
 	// This forces all new mutations in p1 after the burn-in 
 	// to have s recalculated accordingly to the new population size
 	muts_m2_p1 = p1.individuals.genomes.mutationsOfType(m2);
-	muts_m2_p1.setSelectionCoeff(Ns/NAfr);	
+	muts_m2_p1.setSelectionCoeff(Ns/NAfr);
 }
 
 // SPLIT Eurasians (p2) from Africans (p1) and SET UP MIGRATION between them
 // This occurs 2056.396652 generations (51409.9163 years) ago; paper rounds to 2040 gens (51000 yr)
 // Relative to beginning, this is generation 79024-2056.396652=76968
-76968 early() {
+//76968 early() {
+7696 early() {
 	sim.addSubpopSplit("p2", NEur1, p1);       // paper rounds to 1861
-	p1.setMigrationRates(c(p2), c(15e-5)); // paper rounds to 15e-5
-	p2.setMigrationRates(c(p1), c(15e-5)); // paper rounds to 15e-5
+	p1.setMigrationRates(c(p2), c(15e-5*sf)); // paper rounds to 15e-5
+	p2.setMigrationRates(c(p1), c(15e-5*sf)); // paper rounds to 15e-5
 }
 
-76968:78084 early() {
+//76968:78084 early() {
+7696:7808 early() {
 	muts_m2_p2 = p2.individuals.genomes.mutationsOfType(m2);
 	muts_m2_p2.setSelectionCoeff(Ns/NEur1);
 }
@@ -126,24 +135,28 @@ initialize() {
 // SPLIT p2 into European (p2) and East Asian (p3) subpopulations; RESIZE; SET UP MIGRATION between them
 // This occurs 939.8072428 generations (23495.18107 years) ago; paper rounds to 920 gens (23000 yr)
 // Relative to beginning, this is generation 79024-939.8072428=78084
-78084 early() {
+//78084 early() {
+7808 early() {
 	sim.addSubpopSplit("p3", NEAs, p2); // paper rounds to 554
 	p2.setSubpopulationSize(NEur2);      // reduce European size; paper rounds to 1032
-
+	
 	// Set migration rates for the rest of the simulation
-	p1.setMigrationRates(c(p2, p3), c(2.54332678e-5, 0.7770583877e-5)); // paper rounds to c(2.5e-5, 0.78e-5)
-	p2.setMigrationRates(c(p1, p3), c(2.54332678e-5, 3.115817913e-5)); // paper rounds to c(2.5e-5, 3.11e-5)
-	p3.setMigrationRates(c(p1, p2), c(0.7770583877e-5, 3.115817913e-5)); // paper rounds to c(0.78e-5, 3.11e-5)
+	p1.setMigrationRates(c(p2, p3), c(2.54332678e-5*sf, 0.7770583877e-5*sf)); // paper rounds to c(2.5e-5, 0.78e-5)
+	p2.setMigrationRates(c(p1, p3), c(2.54332678e-5*sf, 3.115817913e-5*sf)); // paper rounds to c(2.5e-5, 3.11e-5)
+	p3.setMigrationRates(c(p1, p2), c(0.7770583877e-5*sf, 3.115817913e-5*sf)); // paper rounds to c(0.78e-5, 3.11e-5)
 }
 
 // SET UP EXPONENTIAL GROWTH in Europe (p2) and East Asia (p3)
 // Where N(0) is the base subpopulation size and t = gen - 78084:
 //    N(Europe) should be int(round(N(0) * (1 + 0.003784324268)^t)), i.e., growth is r=0.38% per generation
 //    N(East Asia) should be int(round(N(0) * (1 + 0.004780219543)^t)), i.e., growth is r=0.48% per generation
-78084:79024 early() {
-	t = sim.cycle - 78084;
-	NEur_Nexp = round(NEur2 * (1 + 0.003784324268)^t);   // paper rounds to N(0)=1032 and r=0.0038
-	NEAs_Nexp = round(NEAs * (1 + 0.004780219543)^t);   // paper rounds to N(0)=554 and r=0.0048
+//78084:79024 early() {
+7808:7902 early() {
+   t = sim.cycle - integerDiv(78084,sf);
+	//t = sim.cycle - 78084;
+	//t = sim.cycle - 7808;
+	NEur_Nexp = round(NEur2 * (1 + sf*(0.003784324268))^t);   // paper rounds to N(0)=1032 and r=0.0038
+	NEAs_Nexp = round(NEAs * (1 + sf*(0.004780219543))^t);   // paper rounds to N(0)=554 and r=0.0048
 	
 	p2.setSubpopulationSize(asInteger(NEur_Nexp));
 	p3.setSubpopulationSize(asInteger(NEAs_Nexp));
@@ -158,42 +171,57 @@ initialize() {
 
 // OUTPUT AND TERMINATE
 // Generation 79024 is the present, i.e., 1 initialize + 73104 burn-in + 5919 evolution
-79024 early() {
+//79024 early() {
+7902 early() {
 	// Here you can output one population like the Chinese one 
 	// Or merge two or three and take the SFS for each mutation
 	// set up p3 to generate itself entirely from migrants
-   
+	
 	Afr_size = size(p1.individuals);
 	Eur_size = size(p2.individuals);
-	EAs_size = size(p3.individuals);   
-   
-   sim.addSubpop("p4", (Afr_size + Eur_size + EAs_size));
-   p4.setMigrationRates(c(p1,p2,p3), c(0.333, 0.333, 0.333));
+	EAs_size = size(p3.individuals);
+	print(Afr_size);
+	print(Eur_size);
+	print(EAs_size);
+	
+	sim.addSubpop("p4", (Afr_size + Eur_size + EAs_size));
+	p4.setMigrationRates(c(p1,p2,p3), c(0.333, 0.333, 0.333));
 }
 
-79024 late() {
-    // remove the source subpopulations
-	 p4.setMigrationRates(c(p1, p2, p3), c(0.0, 0.0, 0.0));
-	 p1.setSubpopulationSize(0);
-	 p2.setSubpopulationSize(0);
-	 p3.setSubpopulationSize(0);
+//79024 late() {
+7902 late() {
+	// remove the source subpopulations
+	p4.setMigrationRates(c(p1, p2, p3), c(0.0, 0.0, 0.0));
+	p1.setSubpopulationSize(0);
+	p2.setSubpopulationSize(0);
+	p3.setSubpopulationSize(0);
 }
 
 // SAMPLING BLOCK
-79025 late(){
-   
-    // Take a random sample of individuals from the combined population	
-	 m1fsfs = fsfs(p4, m1, n, F);
-	 m2fsfs = fsfs(p4, m2, n, F);
-	 print(m1fsfs);
-	 print("\n");
-	 print(m2fsfs);
-	 
-	 // Save FSFSs to a file:
-	 writeSFS(m1fsfs, paste0("sfs_neutral_" + basename), outDir);
-	 writeSFS(m2fsfs, paste0("sfs_selected_" + basename), outDir);
+//79025 late(){
+7903 late(){
 	
-	 sim.simulationFinished();
+	// Take a random sample of individuals from the combined population	
+	m1fsfs = fsfs(p4, m1, n, F);
+	m2fsfs = fsfs(p4, m2, n, F);
+	print(m1fsfs);
+	print("\n");
+	print(m2fsfs);
+	
+	// Wtheta for debugging
+	//	ni = 0;
+	//	for (i in 1:40)
+	//		ni = ni + 1/i;
+	//	
+	//	print("WthetaN = " + sum(m1fsfs)/ni + "\n");
+	//	print("WthetaS = " + sum(m2fsfs)/ni + "\n");
+	
+	
+	// Save FSFSs to a file:
+	//writeSFS(m1fsfs, paste0("sfs_neutral_" + basename), outDir);
+	//writeSFS(m2fsfs, paste0("sfs_selected_" + basename), outDir);
+	
+	sim.simulationFinished();
 }
 
 
@@ -207,7 +235,7 @@ initialize() {
 //initializeMutationType("m4", 0.5, "f", Ns/NEur1);   // non-neutral mutations in exons; Ns/NEur1 to get s from Ns. This sets s[Eur1] for N[Eur1].
 //m4.color = "green";
 //m4.colorSubstitution = "green";	
-	
+
 // Neutral and Selected mutations for East Asian  (p3) after the split from Eurasians (p3)
 //initializeMutationType("m5", 0.5, "f", 0.0);       // neutral mutations in introns
 //m5.color = "purple";
@@ -215,11 +243,11 @@ initialize() {
 //initializeMutationType("m6", 0.5, "f", Ns/NEAs);   // non-neutral mutations in exons; Ns/NEAs to get s from Ns. This sets s[EAs] for N[EAs].
 //m6.color = "pink";
 //m6.colorSubstitution = "pink";
-	
+
 // Neutral and Selected mutations for MERGED population (p4)
 //initializeMutationType("m7", 0.5, "f", 0.0);       // neutral mutations in introns
 //initializeMutationType("m8", 0.5, "f", Ns/Nmerged); // non-neutral mutations in exons; Ns/Nmerged to get s from Ns. This sets s[merged] for N[merged].
-	
+
 //// Set p2 m3 and m4 mutation types
 //mutation(m1, p2){
 //	// use m3 instead of m1, in p2
@@ -281,7 +309,7 @@ initialize() {
 //defineGlobal("N2", asInteger(round(1861/7.31)));  // SPLIT Eurasians (p2) from Africans (p1)	
 //defineGlobal("N3", asInteger(round(554/7.31)));   // SPLIT p2 into European (p2) and East Asian (p3) subpopulations
 //defineGlobal("N4", asInteger(round(1032/7.31)));  // REDUCE Eurasian population size
-	
+
 //defineGlobal("Na", 1000);           					 // Ancestral African population size of 7310
 //defineGlobal("N1", 2000);   							 // First population size after burn-in
 //defineGlobal("N2", 150);  								 // SPLIT Eurasians (p2) from Africans (p1)	

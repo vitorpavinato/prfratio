@@ -34,7 +34,7 @@ initialize() {
 	defineGlobal("basename", paste0(simu + "_" + getSeed())); // This is for the simplified output file naming
 	initializeMutationRate(MU);
 	initializeMutationType("m1", 0.5, "f", 0.0);     // neutral mutations in introns
-	initializeMutationType("m2", 0.5, "f", Ns/N);    // non-neutral mutations in exons; Ns/N to get s from Ns
+	initializeMutationType("m2", 0.5, "f", Ns/(2*N));    // non-neutral mutations in exons; Ns/N to get s from Ns
 	m1.convertToSubstitution = F;
 	m2.convertToSubstitution = F;
 	
@@ -107,7 +107,7 @@ initialize() {
    // This make Ns constant throught the simulation as this rescale s, given Np;
    // s = Ns/Np, 
     sel_muts = sim.mutationsOfType(m2);
-    sel_muts.setSelectionCoeff(Ns/Np);
+    sel_muts.setSelectionCoeff(Ns/(2*Np));
     
     //fst = calcFST(p0.genomes, p1.genomes);
     //print(fst);

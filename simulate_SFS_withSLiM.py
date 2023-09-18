@@ -107,48 +107,48 @@ def readANDcombineSFSs(sampleSize, filename, path):
 #     if nsdist == "gamma":
 #         while True:
 #             ns = 1 - np.random.gamma(par1, par2)
-#             if ns >= 1000:
+#             if ns >= -1000:
 #                 break
 #     return ns
 
 # Define the command line arguments
-# def parseargs():
-#     parser = argparse.ArgumentParser("python run_slim.py",formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-#     parser.add_argument("-r", help="number of simulations",
-#                         dest="nsimulations", type=int, required=True)
-#     parser.add_argument("-U", help="Per site mutation rate per generation",
-#                         dest="mu", default=1e-6/4, type=float)
-#     parser.add_argument("-R", help="Per site recombination rate per generation",
-#                         dest="rec", default=1e-6/4, type=float)
-#     parser.add_argument("-N", help="Population census size",
-#                         dest="popSize", default=1000, type=int)
-#     parser.add_argument("-L", help="Sequence length",
-#                         dest="seqLen", default=10000, type=int)
-#     parser.add_argument("-f", help="Number of sequences",
-#                         dest="nSeqs", type=int, required=True)
-#     parser.add_argument("-d", help="Set a distribution for Ns",
-#                         dest="nsdist", default="fixed", type=str)
-#     parser.add_argument("-g", help="Non-synonymous population selection coefficient, 2Ns (Slim uses 1-(2Ns/2N))",
-#                         dest="ns",default=0.0, type=float)
-#     parser.add_argument("-a", help="Set the parameters of the chosen distribution",
-#                         dest="nsdistargs", nargs= "+", default = [0.0, 0.0], type=float)
-#     parser.add_argument("-n", help="Sample size",
-#                         dest="sampleSize", default=40, type=int)
-#     parser.add_argument("-m", help="Model",
-#                         dest="model", default="constant", #required = True,
-#                         type = str)
-#     parser.add_argument("-p", help="Path for working directory",
-#                         dest="parent_dir",default = "results/prfratio",type = str)
-#     parser.add_argument("-s", help="Save simulated SFS to a file",
-#                         dest="savefile",default = True, type = bool)
-#     return parser
+def parseargs():
+    parser = argparse.ArgumentParser("python simulate_SFS_withSLiM.py",formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument("-r", help="number of simulations",
+                        dest="nsimulations", type=int, required=True)
+    parser.add_argument("-U", help="Per site mutation rate per generation",
+                        dest="mu", default=1e-6/4, type=float)
+    parser.add_argument("-R", help="Per site recombination rate per generation",
+                        dest="rec", default=1e-6/4, type=float)
+    parser.add_argument("-N", help="Population census size",
+                        dest="popSize", default=1000, type=int)
+    parser.add_argument("-L", help="Sequence length",
+                        dest="seqLen", default=10000, type=int)
+    parser.add_argument("-f", help="Number of sequences",
+                        dest="nSeqs", type=int, required=True)
+    parser.add_argument("-d", help="Set a distribution for Ns",
+                        dest="nsdist", default="fixed", type=str)
+    parser.add_argument("-g", help="Non-synonymous population selection coefficient 2Ns",
+                        dest="ns",default=0.0, type=float)
+    parser.add_argument("-a", help="Set the parameters of the chosen distribution",
+                        dest="nsdistargs", nargs= "+", default = [0.0, 0.0], type=float)
+    parser.add_argument("-n", help="Sample size",
+                        dest="sampleSize", default=40, type=int)
+    parser.add_argument("-m", help="Model",
+                        dest="model", default="constant", #required = True,
+                        type = str)
+    parser.add_argument("-p", help="Path for working directory",
+                        dest="parent_dir",default = "results/prfratio",type = str)
+    parser.add_argument("-s", help="Save simulated SFS to a file",
+                        dest="savefile",default = True, type = bool)
+    return parser
 
 
-#argv = "-r 3 -U 1e-6/4 -R 1e-6/4 -N 1000 -L 10000 -f 5 -d lognormal -a 10.0 2.0 -n 40 -m constant -d results/prfration"
-#sys.argv = argv.split()
-#print(sys.argv)
-#parser = parseargs()
-#args = parser.parse_args('-d lognormal -a 10.0 2.0'.split())
+# argv = "-r 3 -U 1e-6/4 -R 1e-6/4 -N 1000 -L 10000 -f 5 -d lognormal -a 10.0 2.0 -n 40 -m constant -d results/prfration"
+# sys.argv = argv.split()
+# print(sys.argv)
+# parser = parseargs()
+# args = parser.parse_args('-d lognormal -a 10.0 2.0'.split())
 
 #---PROGRAM DEFINITION---#
 # Pipeline to run multiple sequences (or genes, chrms) for multiples simulations (or replicates)
@@ -156,15 +156,15 @@ def readANDcombineSFSs(sampleSize, filename, path):
 # This generates 1 file with many folded-SFS (one for each replicate); 
 # Each replicate (or simulated SFS) is actually a combination of many sequence or gene SFSs#.
 # Maybe make this a function, so you can implement in `SFS_estimator_bias_variance.py` directly.
-#def main(argv):
-def simulateSFSslim(nsimulations = 3, mu = 1e-6/4, rec = 1e-6/4, popSize = 1000, seqLen = 10000, 
-                    ns = 0.0, nsdist = "fixed", nsdistargs = [0.0, 0.0], sampleSize = 40,
-                    model = "constant", nSeqs = 5, parent_dir = "results/prfratio", savefile = True):
-    # starttime = time.time()
-    # parser = parseargs()
-    # if argv[-1] =='':
-    #     argv = argv[0:-1]
-    # args = parser.parse_args(argv)
+def main(argv):
+# def simulateSFSslim(nsimulations = 3, mu = 1e-6/4, rec = 1e-6/4, popSize = 1000, seqLen = 10000, 
+#                     ns = 0.0, nsdist = "fixed", nsdistargs = [0.0, 0.0], sampleSize = 40,
+#                     model = "constant", nSeqs = 5, parent_dir = "results/prfratio", savefile = True):
+    starttime = time.time()
+    parser = parseargs()
+    if argv[-1] =='':
+        argv = argv[0:-1]
+    args = parser.parse_args(argv)
     
     # CMD arguments 
     # nsimulations = 1
@@ -181,19 +181,19 @@ def simulateSFSslim(nsimulations = 3, mu = 1e-6/4, rec = 1e-6/4, popSize = 1000,
     # parent_dir = "results/slim"
     # savefile = True
     
-    # nsimulations = args.nsimulations
-    # mu = args.mu
-    # rec = args.rec
-    # popSize = args.popSize
-    # seqLen = args.seqLen
-    # ns = args.ns
-    # nsdist = args.nsdist
-    # nsdistargs = args.nsdistargs
-    # sampleSize = args.sampleSize
-    # model = args.model
-    # nSeqs = args.nSeqs
-    # parent_dir = args.parent_dir
-    # savefile = args.savefile
+    nsimulations = args.nsimulations
+    mu = args.mu
+    rec = args.rec
+    popSize = args.popSize
+    seqLen = args.seqLen
+    ns = args.ns
+    nsdist = args.nsdist
+    nsdistargs = args.nsdistargs
+    sampleSize = args.sampleSize
+    model = args.model
+    nSeqs = args.nSeqs
+    parent_dir = args.parent_dir
+    savefile = args.savefile
 
     # Constant value parameters:
     # Intron length and total intron size
@@ -230,7 +230,7 @@ def simulateSFSslim(nsimulations = 3, mu = 1e-6/4, rec = 1e-6/4, popSize = 1000,
     if model == "iexpansion":
         thetaNeutral = thetaNeutral * 10
     if model == "OOAgravel2011":
-        thetaNeutral = thetaNeutral * 99.067
+        thetaNeutral = thetaNeutral * 12.58
     
     # Selected theta
     thetaSelected = (4*popSize*mu)*exon_totalL*nSeqs
@@ -239,7 +239,7 @@ def simulateSFSslim(nsimulations = 3, mu = 1e-6/4, rec = 1e-6/4, popSize = 1000,
     if model == "iexpansion":
         thetaSelected  = thetaSelected * 10
     if model == "OOAgravel2011":
-        thetaSelected = thetaSelected * 99.067
+        thetaSelected = thetaSelected * 12.58
 
     # Second, check if the distribution exists
     # and if parameters are correct!
@@ -288,7 +288,7 @@ def simulateSFSslim(nsimulations = 3, mu = 1e-6/4, rec = 1e-6/4, popSize = 1000,
         j = 0
         while j < nSeqs:
 
-            # Select Ns (or s) from a distribution
+            # Sample 2Ns from a distribution
             if nsdist == "lognormal":
                 while True:
                     ns = 1 - np.random.lognormal(nsdistargs[0], nsdistargs[1])
@@ -360,7 +360,7 @@ def simulateSFSslim(nsimulations = 3, mu = 1e-6/4, rec = 1e-6/4, popSize = 1000,
             j = 0
             while j < nSeqs:
 
-                # Select Ns (or s) from a distribution
+                # Sample 2Ns from a distribution
                 if nsdist == "lognormal":
                     while True:
                         ns = 1 - np.random.lognormal(nsdistargs[0], nsdistargs[1])
@@ -414,9 +414,9 @@ def simulateSFSslim(nsimulations = 3, mu = 1e-6/4, rec = 1e-6/4, popSize = 1000,
 
         return sims_csfs_neutral, sims_csfs_selected, sims_csfs_ratio, sims_nss, sims_seeds
 
-# if __name__ == "__main__":
+if __name__ == "__main__":
 
-#     if len(sys.argv) < 2:
-#         main(['-h'])
-#     else:
-#         main(sys.argv[1:])
+    if len(sys.argv) < 2:
+        main(['-h'])
+    else:
+        main(sys.argv[1:])
