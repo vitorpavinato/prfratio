@@ -2,7 +2,7 @@
 // slim -s <SEED> -d simu=<sim number> -d MU=<MU RATE> -d R=<R RATE> \
 //      -d N=<POPSIZE> -d L=<CHR LENGTH> -d Ns=<NS> -d n=<SAMPLE SIZE> \
 //      -d intronL=<INTRON LENGTH> -d exonL=<EXON LENGTH> \
-//      -d o=<OUTPUT DIR>  models/OOAgravel2011.slim
+//      -d ourDir=<OUTPUT DIR>  models/OOAgravel2011.slim
 
 //NEED TO PARSE SCALED N, MU AND R INTO COMMAND LINE FUNCTION 
 
@@ -28,11 +28,11 @@ initialize() {
 	defineGlobal("NEAs", integerDiv(554, sf));     // SPLIT p2 into European (p2) and East Asian (p3) subpopulations
 	defineGlobal("NEur2",integerDiv(1032,sf));  	  // REDUCE Eurasian population size (p2)
 	//defineGlobal("L", 10000);
-	//defineGlobal("Ns", -0.02);
+	//defineGlobal("Ns", 0.0);
 	defineGlobal("intronL", 810); // at this point, it doesn't matter the size 
 	defineGlobal("exonL", 324);
 	//defineGlobal("n", 40);
-	//defineGlobal("outDir", "/Users/tur92196/WorkDir/prfratio/SLiM/results/prfratio/OOAgravel2011/fixed/-0.02"); // change this to a working dir when testing ouput
+	//defineGlobal("outDir", "/Users/tur92196/WorkDir/prfratio/results/slim/OOAgravel2011/fixed/0.0"); // change this to a working dir when testing ouput
 	//defineGlobal("outDir", "results/prfratio/OOAgravel2011/fixed/-0.02"); // change this to a working dir when testing ouput	
 	
 	// FOR DEBUGGING
@@ -42,9 +42,9 @@ initialize() {
 	// Arguments are parsed from command line
 	//setSeed(seed);
 	defineGlobal("basename", paste0(simu + "_" + getSeed())); // This is for the simplified output file naming
-	initializeMutationRate(MU);
+	initializeMutationRate(MU * sf);
 	initializeMutationType("m1", 0.5, "f", 0.0);     // neutral mutations in introns
-	initializeMutationType("m2", 0.5, "f", Ns/N);   // non-neutral mutations in exons; Ns/Na to get s from Ns. This sets s[a] for N[a].
+	initializeMutationType("m2", 0.5, "f", Ns/(2*N));   // non-neutral mutations in exons; Ns/Na to get s from Ns. This sets s[a] for N[a].
 	m1.convertToSubstitution = F;
 	m2.convertToSubstitution = F;
 	
@@ -75,13 +75,13 @@ initialize() {
 	
 	
 	// single recombination rate	
-	initializeRecombinationRate(R);
+	initializeRecombinationRate(R*sf);
 
 }
 
 // Create a population of size N individuals
 1 late() {
-	sim.addSubpop("p1", integerDiv(N));
+	sim.addSubpop("p1", integerDiv(N, sf));
 	
 	// DEBUGGING ONLY
 	//p0.setValue("previous_N", p0.individualCount);
@@ -113,7 +113,7 @@ initialize() {
 	// This forces all new mutations in p1 after the burn-in 
 	// to have s recalculated accordingly to the new population size
 	muts_m2_p1 = p1.individuals.genomes.mutationsOfType(m2);
-	muts_m2_p1.setSelectionCoeff(Ns/NAfr);
+	muts_m2_p1.setSelectionCoeff(Ns/(2*NAfr));
 }
 
 // SPLIT Eurasians (p2) from Africans (p1) and SET UP MIGRATION between them
@@ -129,7 +129,7 @@ initialize() {
 //76968:78084 early() {
 7696:7808 early() {
 	muts_m2_p2 = p2.individuals.genomes.mutationsOfType(m2);
-	muts_m2_p2.setSelectionCoeff(Ns/NEur1);
+	muts_m2_p2.setSelectionCoeff(Ns/(2*NEur1));
 }
 
 // SPLIT p2 into European (p2) and East Asian (p3) subpopulations; RESIZE; SET UP MIGRATION between them
@@ -153,8 +153,7 @@ initialize() {
 //78084:79024 early() {
 7808:7902 early() {
    t = sim.cycle - integerDiv(78084,sf);
-	//t = sim.cycle - 78084;
-	//t = sim.cycle - 7808;
+   
 	NEur_Nexp = round(NEur2 * (1 + sf*(0.003784324268))^t);   // paper rounds to N(0)=1032 and r=0.0038
 	NEAs_Nexp = round(NEAs * (1 + sf*(0.004780219543))^t);   // paper rounds to N(0)=554 and r=0.0048
 	
@@ -162,10 +161,10 @@ initialize() {
 	p3.setSubpopulationSize(asInteger(NEAs_Nexp));
 	
 	muts_m2_p2 = p2.individuals.genomes.mutationsOfType(m2);
-	muts_m2_p2.setSelectionCoeff(Ns/NEur_Nexp);
+	muts_m2_p2.setSelectionCoeff(Ns/(2*NEur_Nexp));
 	
 	muts_m2_p3 = p3.individuals.genomes.mutationsOfType(m2);
-	muts_m2_p3.setSelectionCoeff(Ns/NEAs_Nexp);
+	muts_m2_p3.setSelectionCoeff(Ns/(2*NEAs_Nexp));
 
 }
 
@@ -218,8 +217,8 @@ initialize() {
 	
 	
 	// Save FSFSs to a file:
-	//writeSFS(m1fsfs, paste0("sfs_neutral_" + basename), outDir);
-	//writeSFS(m2fsfs, paste0("sfs_selected_" + basename), outDir);
+	writeSFS(m1fsfs, paste0("sfs_neutral_" + basename), outDir);
+	writeSFS(m2fsfs, paste0("sfs_selected_" + basename), outDir);
 	
 	sim.simulationFinished();
 }

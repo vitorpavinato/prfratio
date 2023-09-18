@@ -28,7 +28,7 @@ def readSFS(file):
 def runSlim(simulation, mu, rec, popSize, seqLen, ns, sampleSize, model, outdir, cleandir = True):
     # Path to SLiM
     slim = "/usr/local/bin/slim"
-    models = "/Users/tur92196/WorkDir/prfratio/SLiM/models"
+    models = "/Users/tur92196/WorkDir/prfratio/slim/models"
 
     # # Model dictionary
     # avail_models = {"constant": "Constant size model",
@@ -46,7 +46,7 @@ def runSlim(simulation, mu, rec, popSize, seqLen, ns, sampleSize, model, outdir,
 
     # Sample a seed every function call
     seed = str(int(np.random.uniform(low=100000000, high=900000000)))
-    #seed = str(123456) # debugging only
+    # seed = str(123456) # debugging only
     
     # Run SLiM as a python subprocess
     run = subprocess.run([slim, "-s", seed, "-d", ("simu="+str(simulation)), "-d", ("MU="+str(mu)), "-d", ("R="+str(rec)),
@@ -170,14 +170,14 @@ def main(argv):
     # nsimulations = 1
     # mu = 1e-6/4
     # rec = 1e-6/4
-    # popSize = 1000
+    # popSize = 731
     # seqLen = 10000
     # ns = 0.0
-    # nsdist = "lognormal"
+    # nsdist = "fixed"
     # nsdistargs = [0.3, 0.6]
     # sampleSize = 40
-    # model = "constant"
-    # nSeqs = 5
+    # model = "OOAgravel2011"
+    # nSeqs = 10
     # parent_dir = "results/slim"
     # savefile = True
     
@@ -230,7 +230,7 @@ def main(argv):
     if model == "iexpansion":
         thetaNeutral = thetaNeutral * 10
     if model == "OOAgravel2011":
-        thetaNeutral = thetaNeutral * 12.58
+        thetaNeutral = thetaNeutral * 122.24
     
     # Selected theta
     thetaSelected = (4*popSize*mu)*exon_totalL*nSeqs
@@ -239,7 +239,7 @@ def main(argv):
     if model == "iexpansion":
         thetaSelected  = thetaSelected * 10
     if model == "OOAgravel2011":
-        thetaSelected = thetaSelected * 12.58
+        thetaSelected = thetaSelected * 122.24
 
     # Second, check if the distribution exists
     # and if parameters are correct!
@@ -304,7 +304,7 @@ def main(argv):
             else:
                 list_nss.append(ns)
             
-            seed, neutral_sfs, selected_sfs = runSlim(simulation=simulation,mu=mu,rec=rec,popSize=popSize,seqLen=seqLen,ns=ns,sampleSize=sampleSize,model=model,outdir=path,cleandir=True) 
+            seed, neutral_sfs, selected_sfs = runSlim(simulation=simulation,mu=mu,rec=rec,popSize=popSize,seqLen=seqLen,ns=ns,sampleSize=sampleSize,model=model,outdir=path,cleandir=False) 
             
             list_neutral_sfss.append(neutral_sfs)
             list_selected_sfss.append(selected_sfs)
@@ -337,7 +337,7 @@ def main(argv):
             writeCombinedSFS(sims_csfs_neutralfile, header_neutral, sim_csfs_neutral)
             writeCombinedSFS(sims_csfs_selectedfile, header_selected, sim_csfs_selected)
 
-        return csfs_neutral, csfs_selected, csfs_ratio, list_nss, list_seeds
+        # return csfs_neutral, csfs_selected, csfs_ratio, list_nss, list_seeds
     else: 
 
         # These lists collects the each simulation (combined) SFS and lists of seeds and ns
@@ -412,7 +412,7 @@ def main(argv):
             writeCombinedSFS(sims_csfs_neutralfile, header_neutral, sims_csfs_neutral)
             writeCombinedSFS(sims_csfs_selectedfile, header_selected, sims_csfs_selected)
 
-        return sims_csfs_neutral, sims_csfs_selected, sims_csfs_ratio, sims_nss, sims_seeds
+        # return sims_csfs_neutral, sims_csfs_selected, sims_csfs_ratio, sims_nss, sims_seeds
 
 if __name__ == "__main__":
 
