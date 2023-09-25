@@ -1,0 +1,13 @@
+__pycache__
+.DS_Store
+SLiM/.DS_Store
+SLiM/.DS_Store
+SLiM/doc/*
+SLiM/genome_features
+SLiM/results
+SLiM/src/combine_sfs.py
+SLiM/src/expected_snps.py
+SLiM/src/run_slim.sh
+results/*
+doc
+data
