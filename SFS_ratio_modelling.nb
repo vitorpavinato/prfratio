@@ -10,10 +10,10 @@
 NotebookFileLineBreakTest
 NotebookFileLineBreakTest
 NotebookDataPosition[       158,          7]
-NotebookDataLength[    202656,       5477]
-NotebookOptionsPosition[    191859,       5297]
-NotebookOutlinePosition[    192306,       5314]
-CellTagsIndexPosition[    192263,       5311]
+NotebookDataLength[    208315,       5629]
+NotebookOptionsPosition[    197415,       5448]
+NotebookOutlinePosition[    197858,       5465]
+CellTagsIndexPosition[    197815,       5462]
 WindowFrame->Normal*)
 
 (* Beginning of Notebook Content *)
@@ -104,6 +104,192 @@ size model with directional selection and no dominance)"
   3.896343011598916*^9, 
   3.896343012815527*^9}},ExpressionUUID->"a006e748-31ff-4eb6-b7ce-\
 fca060487ba8"],
+
+Cell[TextData[{
+ "Consider bin ",
+ Cell[BoxData[
+  FormBox["i", TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "757e45ab-f0e2-43fc-b601-35c517613863"],
+ " .  Let ",
+ Cell[BoxData[
+  FormBox[
+   SubscriptBox["C", 
+    RowBox[{"S", ",", "i"}]], TraditionalForm]],ExpressionUUID->
+  "6ccb4fd2-d36b-4418-8db8-6f9a1285f65e"],
+ " and ",
+ Cell[BoxData[
+  FormBox[
+   SubscriptBox["C", 
+    RowBox[{"N", ",", "i"}]], TraditionalForm]],ExpressionUUID->
+  "cf54a804-0e87-4088-97b2-e7e92ef353ae"],
+ " be the counts for bin ",
+ Cell[BoxData[
+  FormBox["i", TraditionalForm]],ExpressionUUID->
+  "103a0fdf-4dfc-493a-aa9a-6cd1b04ab85e"],
+ " in the selected and neutral observed SFSs, respectively.\nThen let  ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    SubscriptBox["Z", "i"], "=", 
+    RowBox[{
+     SubscriptBox["C", 
+      RowBox[{"S", ",", "i"}]], "/", 
+     SubscriptBox["C", 
+      RowBox[{"N", ",", "i"}]]}]}], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "d0787ee8-a4d4-49c0-ae7d-512521b30188"],
+ "  and consider that there are three components to this ratio:  (1) the \
+ratio of the mutation rate of incoming mutations for each type that \
+ultimately have the chance to end up in bin ",
+ Cell[BoxData[
+  FormBox["i", TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "42ba3ee2-e8d1-4748-b38f-910a15ac9e4e"],
+ ",  ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    SubscriptBox["u", 
+     RowBox[{"S", ",", "i"}]], "/", 
+    SubscriptBox["u", 
+     RowBox[{"N", ",", "i"}]]}], TraditionalForm]],ExpressionUUID->
+  "7d56f875-0330-4441-8789-aa5ce373b5e8"],
+ " ,  which will be the same across allele frequency classes, ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    RowBox[{
+     SubscriptBox["u", 
+      RowBox[{"S", ",", "i"}]], "/", 
+     SubscriptBox["u", 
+      RowBox[{"N", ",", "i"}]]}], "=", " ", 
+    RowBox[{
+     SubscriptBox["u", "S"], "/", 
+     SubscriptBox["u", "N"]}]}], TraditionalForm]],ExpressionUUID->
+  "51e0e11e-5ab2-4169-b0d3-fb030acc025f"],
+ " ;  (2) a demography & linkage-effect scalar for bin ",
+ Cell[BoxData[
+  FormBox["i", TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "bec8fe42-b0e0-4e0f-aa7b-fa366edc1cef"],
+ " that is shared by both groups of variants,  ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    SubscriptBox["D", 
+     RowBox[{"S", ",", "i"}]], "=", 
+    SubscriptBox["D", 
+     RowBox[{"N", ",", "i"}]]}], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "99236122-04c3-4b68-90b5-7b48fa8c0d49"],
+ ",  ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    RowBox[{
+     SubscriptBox["D", 
+      RowBox[{"S", ",", "i"}]], "/", 
+     SubscriptBox["D", 
+      RowBox[{"N", ",", "i"}]]}], "=", "1"}], TraditionalForm]],
+  ExpressionUUID->"92595191-8a29-4be5-b4ff-85b8efd2d3c8"],
+ ";  and (3) a term for the impact of direct selection on the non-neutral \
+variants, ",
+ Cell[BoxData[
+  FormBox[
+   SubscriptBox["\[DoubleStruckS]", "i"], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "defdd36f-584d-4002-ac84-70f319e8a3ca"],
+ ",  which depends upon the actual selection coefficient acting on the \
+non-neutral variants, ",
+ Cell[BoxData[
+  FormBox["s", TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "0f563fd4-ab12-4a1b-be7a-cdaf285413c3"],
+ ".    If we assume that to a first approximation ",
+ Cell[BoxData[
+  FormBox[
+   SubscriptBox["\[DoubleStruckS]", "i"], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "6160e821-ee56-4b8c-88d8-002cb6976ee9"],
+ " acts independently of demography, then ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    SubscriptBox["Z", "i"], "=", 
+    RowBox[{
+     SubscriptBox["\[DoubleStruckS]", "i"], 
+     FractionBox[
+      SubscriptBox["u", "S"], 
+      SubscriptBox["u", "N"]]}]}], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "a55d4f4b-4731-4fa8-8c8b-053d6a6312c8"],
+ " .    Of course selection cannot act independently of demography.    \
+However if we assume that ",
+ Cell[BoxData[
+  FormBox["s", TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "99819f8e-54bf-4981-a3e7-db901a0b7422"],
+ " is constant across any subpopulations that might be present,  then the \
+interaction between selection and demography can be captured using a term for \
+the rate of genetic drift.  Regardless of the demography,  the changes in \
+frequency of each selected variant depends on both the selection pressure \
+(i.e. ",
+ Cell[BoxData[
+  FormBox["s", TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "87ae6d6a-561c-4919-a2ae-10de09c5db83"],
+ ") and the population sampling variance from generation to generation,  i.e. \
+the rate of genetic drift.    If we capture this sampling variance with a \
+term for the effective number of gene copies,  ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"2", " ", "N"}], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "78d2fe6e-ccec-41c2-9c2c-c1fcdee81883"],
+ ",  then the impact of selection will scale with both ",
+ Cell[BoxData[
+  FormBox["s", TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "8cd4ea47-f024-4042-b68b-3a0471870111"],
+ " and ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"2", "N"}], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "0a7eb9a3-4d79-422d-b03c-a4badb8c0769"],
+ ".   In other words,   we can carry forward with an analysis of selection, \
+in terms of ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"2", "N", " ", "s"}], TraditionalForm]],
+  FormatType->TraditionalForm,ExpressionUUID->
+  "9b01b3c5-cb8c-4c49-82a6-eb7c180fa3c5"],
+ ", as is always done when using PRF methods,  even though we have no idea of \
+how demography or linkage is affecting the rate of genetic drift or the \
+counts  ",
+ Cell[BoxData[
+  FormBox[
+   SubscriptBox["C", 
+    RowBox[{"S", ",", "i"}]], TraditionalForm]],ExpressionUUID->
+  "496ed04a-282a-47d5-a35d-bd0188e2c15e"],
+ " and ",
+ Cell[BoxData[
+  FormBox[
+   SubscriptBox["C", 
+    RowBox[{"N", ",", "i"}]], TraditionalForm]],ExpressionUUID->
+  "4374dae8-153a-47a5-882c-dcce72e95e3d"],
+ " ."
+}], "Text",
+ CellChangeTimes->CompressedData["
+1:eJxTTMoPSmViYGAQA2IQ7cH14XGz9FtH+Z3tr0G0w/LV70G0yTGLzyDa6uXm
+3hVAerZl6XoQfXnZrM0g+hfDyb0gOmLd14Mg2lDY6TSInsV5/zyI7u0zuQui
+E4Ktn4DonNMmn0G0u5rDdxB97Wj/TxA96VYDy0ogPcM8lRdEH1heIwiifyn0
+g2mVgGpZEJ02ux9MvxOZpwyiH0+wUwXR69QPaYHoVa+XG4D1q3abgvWZtAeB
+6GV/y8NA9J6XaRkg+nn3/VwQ3WFoVg+iBWWkm0E06+QVYPrCr6JuEH3vkvEK
+EP2HN2YNiH5is+MwiJ7/ve4UiN7X4/oARE/SUnwGou9mxD0H0W/V2t6B6CmH
+G7+AaABr37Or
+  "],ExpressionUUID->"da5db689-f8c7-47d8-b2d4-6516208eea92"],
 
 Cell[CellGroupData[{
 
@@ -451,13 +637,11 @@ Cell[TextData[{
  "Under the Fisher-Wright model,  we expect ",
  Cell[BoxData[
   FormBox[
-   RowBox[{"\[Theta]", "/", "i"}], TraditionalForm]],
-  FormatType->TraditionalForm,ExpressionUUID->
+   RowBox[{"\[Theta]", "/", "i"}], TraditionalForm]],ExpressionUUID->
   "9959a7a4-ed62-4234-bf28-7b22af00a1c5"],
  "  sites in class ",
  Cell[BoxData[
-  FormBox["i", TraditionalForm]],
-  FormatType->TraditionalForm,ExpressionUUID->
+  FormBox["i", TraditionalForm]],ExpressionUUID->
   "2cb26e89-b601-4bc4-9d09-765ccbd2348c"],
  "  if there is no selection,  but instead we get ",
  Cell[BoxData[
@@ -465,8 +649,7 @@ Cell[TextData[{
    RowBox[{"\[Theta]", " ", 
     RowBox[{"F", "[", 
      RowBox[{"i", ",", "\[Gamma]"}], "]"}]}], TraditionalForm]],
-  FormatType->TraditionalForm,ExpressionUUID->
-  "84a50057-cb58-410b-a6e8-d3c513b95f29"],
+  ExpressionUUID->"84a50057-cb58-410b-a6e8-d3c513b95f29"],
  "\nSo the expected total number that are missing because selection removed \
 them is ",
  Cell[BoxData[
@@ -480,27 +663,23 @@ them is ",
       FractionBox["1", "i"], "-", 
       RowBox[{"F", "[", 
        RowBox[{"i", ",", "\[Gamma]"}], "]"}]}], ")"}]}], TraditionalForm]],
-  FormatType->TraditionalForm,ExpressionUUID->
-  "a4c462b2-71b2-4370-b235-4f704d23da99"],
+  ExpressionUUID->"a4c462b2-71b2-4370-b235-4f704d23da99"],
  "\nIf we have a selected \[Theta], ",
  Cell[BoxData[
   FormBox[
-   SubscriptBox["\[Theta]", "S"], TraditionalForm]],
-  FormatType->TraditionalForm,ExpressionUUID->
+   SubscriptBox["\[Theta]", "S"], TraditionalForm]],ExpressionUUID->
   "25f18e62-a26b-4e3c-bb31-f4a204e979ed"],
  " and a neutral \[Theta], ",
  Cell[BoxData[
   FormBox[
-   SubscriptBox["\[Theta]", "N"], TraditionalForm]],
-  FormatType->TraditionalForm,ExpressionUUID->
+   SubscriptBox["\[Theta]", "N"], TraditionalForm]],ExpressionUUID->
   "b582e51a-f408-4ed6-b892-b5f8f668fb1e"],
  "  then we can estimate the ratio ",
  Cell[BoxData[
   FormBox[
    RowBox[{
     SubscriptBox["\[Theta]", "S"], "/", 
-    SubscriptBox["\[Theta]", "N"]}], TraditionalForm]],
-  FormatType->TraditionalForm,ExpressionUUID->
+    SubscriptBox["\[Theta]", "N"]}], TraditionalForm]],ExpressionUUID->
   "91711b2a-b6a2-42a2-b0e4-97143a5176f4"],
  " for a given \[Gamma] \n",
  Cell[BoxData[
@@ -522,27 +701,23 @@ them is ",
        UnderoverscriptBox["\[Sum]", 
         RowBox[{"i", "=", "1"}], 
         RowBox[{"n", "-", "1"}]], 
-       RowBox[{"1", "/", "i"}]}]}]]}], TraditionalForm]],
-  FormatType->TraditionalForm,ExpressionUUID->
+       RowBox[{"1", "/", "i"}]}]}]]}], TraditionalForm]],ExpressionUUID->
   "26ab20e7-00f8-49fe-9288-0e0d45ea7c1c"],
  "\n\nLet ",
  Cell[BoxData[
   FormBox[
    SubscriptBox["C", 
-    RowBox[{"S", ",", "i"}]], TraditionalForm]],
-  FormatType->TraditionalForm,ExpressionUUID->
+    RowBox[{"S", ",", "i"}]], TraditionalForm]],ExpressionUUID->
   "2be5aba7-b8c4-42ab-834b-e80e2b63ef1f"],
  " and ",
  Cell[BoxData[
   FormBox[
    SubscriptBox["C", 
-    RowBox[{"N", ",", "i"}]], TraditionalForm]],
-  FormatType->TraditionalForm,ExpressionUUID->
+    RowBox[{"N", ",", "i"}]], TraditionalForm]],ExpressionUUID->
   "b02fa0c2-d18f-4492-8553-ecaf329f89a3"],
  " be the counts for bin ",
  Cell[BoxData[
-  FormBox["i", TraditionalForm]],
-  FormatType->TraditionalForm,ExpressionUUID->
+  FormBox["i", TraditionalForm]],ExpressionUUID->
   "6688f63f-eaf7-44ed-bf1f-31c67d2f6c09"],
  " in the selected and neutral observed SFSs, respectively.\nand ",
  Cell[BoxData[
@@ -554,8 +729,7 @@ them is ",
       RowBox[{"i", "=", "1"}], 
       RowBox[{"n", "-", "1"}]], 
      SubscriptBox["C", 
-      RowBox[{"S", ",", "i"}]]}]}], TraditionalForm]],
-  FormatType->TraditionalForm,ExpressionUUID->
+      RowBox[{"S", ",", "i"}]]}]}], TraditionalForm]],ExpressionUUID->
   "d7b01863-ebb2-4c9f-a594-9080ebbdc4c5"],
  " and ",
  Cell[BoxData[
@@ -567,8 +741,7 @@ them is ",
       RowBox[{"i", "=", "1"}], 
       RowBox[{"n", "-", "1"}]], 
      SubscriptBox["C", 
-      RowBox[{"N", ",", "i"}]]}]}], TraditionalForm]],
-  FormatType->TraditionalForm,ExpressionUUID->
+      RowBox[{"N", ",", "i"}]]}]}], TraditionalForm]],ExpressionUUID->
   "3aacff6b-f42c-4fe7-82b5-43640e868a42"],
  " be the total counts for each. \nThen when we have a good estimate it \
 should be true that \n",
@@ -594,8 +767,7 @@ should be true that \n",
        UnderoverscriptBox["\[Sum]", 
         RowBox[{"i", "=", "1"}], 
         RowBox[{"n", "-", "1"}]], 
-       RowBox[{"1", "/", "i"}]}]}]]}], TraditionalForm]],
-  FormatType->TraditionalForm,ExpressionUUID->
+       RowBox[{"1", "/", "i"}]}]}]]}], TraditionalForm]],ExpressionUUID->
   "95762d95-e5b4-4937-a254-3b6a0a6c3190"],
  "\nFor a given value of \[Gamma] then we can solve for one of the \[Theta] \
 terms. \nLet ",
@@ -614,8 +786,7 @@ terms. \nLet ",
       UnderoverscriptBox["\[Sum]", 
        RowBox[{"i", "=", "1"}], 
        RowBox[{"n", "-", "1"}]], 
-      RowBox[{"1", "/", "i"}]}]]}], TraditionalForm]],
-  FormatType->TraditionalForm,ExpressionUUID->
+      RowBox[{"1", "/", "i"}]}]]}], TraditionalForm]],ExpressionUUID->
   "df64b362-ba3d-4304-bb0d-3da5a21354c9"],
  "\nthen ",
  Cell[BoxData[
@@ -627,8 +798,7 @@ terms. \nLet ",
     FractionBox[
      RowBox[{"\[Zeta]", " ", 
       SubscriptBox["\[Theta]", "S"]}], 
-     SubscriptBox["\[Theta]", "N"]]}], TraditionalForm]],
-  FormatType->TraditionalForm,ExpressionUUID->
+     SubscriptBox["\[Theta]", "N"]]}], TraditionalForm]],ExpressionUUID->
   "d0102ddc-db68-4581-8ce0-ba034e23bef2"],
  " and ",
  Cell[BoxData[
@@ -639,8 +809,7 @@ terms. \nLet ",
      RowBox[{"\[Zeta]", " ", 
       SubscriptBox["C", "N"], " ", 
       SubscriptBox["\[Theta]", "S"]}], 
-     SubscriptBox["C", "S"]]}], TraditionalForm]],
-  FormatType->TraditionalForm,ExpressionUUID->
+     SubscriptBox["C", "S"]]}], TraditionalForm]],ExpressionUUID->
   "baaaa761-1b45-44a5-bb17-751be7b0d82b"],
  " is an estimate of \[Zeta]\nThis assumes Fisher-Wright,  but  a similar \
 argument as that used in support of using the ratio of snp counts would apply \
@@ -948,8 +1117,7 @@ Cell[TextData[{
 of \[Gamma],  and for \[Gamma]>10 or so returns 1,  and for ",
  Cell[BoxData[
   FormBox[
-   RowBox[{"\[Gamma]", "<", "10"}], TraditionalForm]],
-  FormatType->TraditionalForm,ExpressionUUID->
+   RowBox[{"\[Gamma]", "<", "10"}], TraditionalForm]],ExpressionUUID->
   "9527bb6e-40ba-40e4-b78d-79de64029717"],
  " returns -1 . \n\nNonetheless the calculation of  F(i,\[Gamma])  yields  a \
 number,  i.e. a constant for a given ",
@@ -1013,16 +1181,14 @@ distribution we also need ",
  "\nWhen \[Gamma] is high, ",
  Cell[BoxData[
   FormBox[
-   RowBox[{"Coth", "[", "\[Gamma]", "]"}], TraditionalForm]],
-  FormatType->TraditionalForm,ExpressionUUID->
+   RowBox[{"Coth", "[", "\[Gamma]", "]"}], TraditionalForm]],ExpressionUUID->
   "6bc27c81-aab9-420d-94da-708d00f095e4"],
  " is 1, and each of these become ",
  Cell[BoxData[
   FormBox[
    FractionBox["n", 
     RowBox[{"i", "(", 
-     RowBox[{"n", "-", "i"}], ")"}]], TraditionalForm]],
-  FormatType->TraditionalForm,ExpressionUUID->
+     RowBox[{"n", "-", "i"}], ")"}]], TraditionalForm]],ExpressionUUID->
   "bc25eb58-df4a-4cf3-898e-55579f35ead9"],
  "\nThe sum of these is ",
  Cell[BoxData[
@@ -1049,14 +1215,12 @@ distribution we also need ",
             RowBox[{"2", " ", "\[Gamma]"}]}], "]"}]}], ")"}]}]}], ")"}]}], 
     RowBox[{"2", " ", "i", " ", 
      RowBox[{"(", 
-      RowBox[{"n", "-", "i"}], ")"}]}]], TraditionalForm]],
-  FormatType->TraditionalForm,ExpressionUUID->
+      RowBox[{"n", "-", "i"}], ")"}]}]], TraditionalForm]],ExpressionUUID->
   "371909f3-8958-4497-87be-5fd3e6a5d954"],
  "\nWhen \[Gamma] is high, ",
  Cell[BoxData[
   FormBox[
-   RowBox[{"Coth", "[", "\[Gamma]", "]"}], TraditionalForm]],
-  FormatType->TraditionalForm,ExpressionUUID->
+   RowBox[{"Coth", "[", "\[Gamma]", "]"}], TraditionalForm]],ExpressionUUID->
   "b50318d1-1295-4eeb-9931-63a5214a033d"],
  " is 1, and  this becomes ",
  Cell[BoxData[
@@ -1064,8 +1228,7 @@ distribution we also need ",
    FractionBox[
     RowBox[{"2", " ", "n"}], 
     RowBox[{"i", "(", 
-     RowBox[{"n", "-", "i"}], ")"}]], TraditionalForm]],
-  FormatType->TraditionalForm,ExpressionUUID->
+     RowBox[{"n", "-", "i"}], ")"}]], TraditionalForm]],ExpressionUUID->
   "ed060aa8-abbb-4329-83de-d255135fcfe6"]
 }], "Text",
  CellChangeTimes->{{3.6049658220203104`*^9, 3.604965827361318*^9}, {
@@ -1606,8 +1769,7 @@ correctly identifying ancestral allele ",
  Cell[BoxData[
   FormBox[
    RowBox[{"Pr", "(", 
-    RowBox[{"m", "=", "a"}], ")"}], TraditionalForm]],
-  FormatType->TraditionalForm,ExpressionUUID->
+    RowBox[{"m", "=", "a"}], ")"}], TraditionalForm]],ExpressionUUID->
   "55860b0a-f22a-439c-a2b9-7dfa088e08ec"],
  "\nlet ",
  Cell[BoxData[
@@ -1615,36 +1777,31 @@ correctly identifying ancestral allele ",
    RowBox[{"\[Omega]", "=", 
     RowBox[{"1", "-", 
      RowBox[{"Pr", "(", 
-      RowBox[{"m", "=", "a"}], ")"}]}]}], TraditionalForm]],
-  FormatType->TraditionalForm,ExpressionUUID->
+      RowBox[{"m", "=", "a"}], ")"}]}]}], TraditionalForm]],ExpressionUUID->
   "0c3d9e02-42ba-4111-824f-7103988bb601"],
  " ,  the misspecification probability,  which we will suppose is much less \
 than 0.5. \n \nNow suppose we have an unfolded distribution,  but the \
 observed value of ",
  Cell[BoxData[
   FormBox[
-   SubscriptBox["X", "i"], TraditionalForm]],
-  FormatType->TraditionalForm,ExpressionUUID->
+   SubscriptBox["X", "i"], TraditionalForm]],ExpressionUUID->
   "aece6c74-b162-4801-b7bd-b8f117080cad"],
  " includes some correctly identified SNPs and some that should be in ",
  Cell[BoxData[
   FormBox[
    SubscriptBox["X", 
-    RowBox[{"n", "-", "i"}]], TraditionalForm]],
-  FormatType->TraditionalForm,ExpressionUUID->
+    RowBox[{"n", "-", "i"}]], TraditionalForm]],ExpressionUUID->
   "6e16698f-9476-44a1-b72c-6a5809f2ec06"],
  " because they were misidentified.  Similarly ",
  Cell[BoxData[
   FormBox[
    SubscriptBox["X", 
-    RowBox[{"n", "-", "i"}]], TraditionalForm]],
-  FormatType->TraditionalForm,ExpressionUUID->
+    RowBox[{"n", "-", "i"}]], TraditionalForm]],ExpressionUUID->
   "ec1b1174-c506-4949-8ddb-60a3a6758991"],
  " has some that should be in ",
  Cell[BoxData[
   FormBox[
-   SubscriptBox["X", "i"], TraditionalForm]],
-  FormatType->TraditionalForm,ExpressionUUID->
+   SubscriptBox["X", "i"], TraditionalForm]],ExpressionUUID->
   "10bdc8e5-b87e-473d-88aa-e448acc0125f"],
  "\nThen ",
  Cell[BoxData[
@@ -1730,8 +1887,7 @@ observed value of ",
               RowBox[{
                RowBox[{"n", "-", "i"}], ",", "\[Gamma]"}], ")"}], 
              "\[Omega]"}]}], ")"}]}], ")"}], "x"]}], 
-      RowBox[{"x", "!"}]]}]}], TraditionalForm]],
-  FormatType->TraditionalForm,ExpressionUUID->
+      RowBox[{"x", "!"}]]}]}], TraditionalForm]],ExpressionUUID->
   "e6227981-30d6-4628-af2e-3013e2d0e750"],
  "\nThis seems tractable as the log of this is just\n",
  Cell[BoxData[
@@ -1763,8 +1919,7 @@ observed value of ",
            RowBox[{
             RowBox[{"n", "-", "i"}], ",", "\[Gamma]"}], ")"}], "\[Omega]"}]}],
          ")"}]}], "]"}]}], " ", "-", " ", 
-    RowBox[{"Loggamma", "[", "x", "]"}]}], TraditionalForm]],
-  FormatType->TraditionalForm,ExpressionUUID->
+    RowBox[{"Loggamma", "[", "x", "]"}]}], TraditionalForm]],ExpressionUUID->
   "e40b9adb-c516-409a-97ef-68d27bc60a92"],
  " \n\n"
 }], "Text",
@@ -2493,8 +2648,7 @@ corresponding values of \[Gamma]. Then the probability of observing ",
 numerically, over some density for \[Gamma] and that the result will still be \
 a Poisson rate for bin ",
  Cell[BoxData[
-  FormBox["i", TraditionalForm]],
-  FormatType->TraditionalForm,ExpressionUUID->
+  FormBox["i", TraditionalForm]],ExpressionUUID->
   "3fc00a49-e41b-4d41-9cf6-fa219c6f1911"],
  ". \nWould we have any access to \[CapitalPhi]  ??    i.e. some arbitrary \
 discrete distribution?  Probably not as it would have too many terms. "
@@ -3486,8 +3640,7 @@ Cell[TextData[{
  "One tricky area is that the expectations of the ratio may not change very \
 much as ",
  Cell[BoxData[
-  FormBox["i", TraditionalForm]],
-  FormatType->TraditionalForm,ExpressionUUID->
+  FormBox["i", TraditionalForm]],ExpressionUUID->
   "0eefde41-a65d-4d87-9b9a-8ec7bf77c0ee"],
  " gets bigger,  but the variance should go up dramatically.   If this is a \
 problem we could consider summing across adjacent bins in order to get larger \
@@ -3721,9 +3874,7 @@ in the denominator. \nThen the density of ",
    RowBox[{"f", "(", 
     RowBox[{
      RowBox[{"z", ";", "\[Alpha]"}], ",", "\[Beta]", ",", "\[Gamma]"}], ")"}],
-    TraditionalForm]],
-  FormatType->TraditionalForm,ExpressionUUID->
-  "8748c436-1170-4e09-8cbc-f08d3fc1ff1e"],
+    TraditionalForm]],ExpressionUUID->"8748c436-1170-4e09-8cbc-f08d3fc1ff1e"],
  " \nwhere ",
  Cell[BoxData[
   FormBox[
@@ -3986,17 +4137,17 @@ in the denominator. \nThen the density of ",
           RowBox[{"1", "+", 
            FractionBox[
             SuperscriptBox["z", "2"], "\[Beta]"]}]], " ", "\[Delta]"}]]}], 
-      ")"}]}]}], TraditionalForm]],
-  FormatType->TraditionalForm,ExpressionUUID->
+      ")"}]}]}], TraditionalForm]],ExpressionUUID->
   "974360e7-bf99-4ae8-8646-be77e9921d00"],
- "\nIf \[Beta] or so it works mostly like the mean of the density, while \
-\[Delta] works like a variance .  When \[Beta] > 10 the density gets weird \
-shapes. "
+ "\nBy playing around with some 3D plots,  \[Beta]  act mostly like the mean \
+of the density, while \[Delta] works like a variance .  When \[Beta] > 10 the \
+density gets weird shapes. "
 }], "Text",
  CellChangeTimes->{{3.901896452925785*^9, 3.901896530753694*^9}, {
   3.901896579086481*^9, 3.901896714167717*^9}, {3.901896901863333*^9, 
-  3.9018969044724493`*^9}, {3.901896941248477*^9, 
-  3.901897009969146*^9}},ExpressionUUID->"ebdfd726-b28e-4ffb-b120-\
+  3.9018969044724493`*^9}, {3.901896941248477*^9, 3.901897009969146*^9}, {
+  3.9070583387181225`*^9, 
+  3.907058360729662*^9}},ExpressionUUID->"ebdfd726-b28e-4ffb-b120-\
 aeb19c32009e"]
 }, Open  ]],
 
@@ -5296,7 +5447,7 @@ In brief,  the lognormal worked best,  except  when both terms are less than \
 }, Open  ]]
 },
 WindowSize->{1524, 783.5999999999999},
-WindowMargins->{{960.6, Automatic}, {Automatic, 0.6}},
+WindowMargins->{{3, Automatic}, {Automatic, 0.6}},
 Magnification:>1.4 Inherited,
 FrontEndVersion->"13.3 for Microsoft Windows (64-bit) (July 24, 2023)",
 StyleDefinitions->"Default.nb",
@@ -5318,164 +5469,165 @@ Cell[580, 22, 164, 3, 136, "Title",ExpressionUUID->"1603bf2d-a0c4-4a4d-8d3f-39e1
 Cell[747, 27, 1676, 28, 359, "Text",ExpressionUUID->"e831b98a-6ff8-4299-9a86-0bddc3548771"],
 Cell[2426, 57, 1263, 20, 172, "Text",ExpressionUUID->"7011b62e-40df-4329-b111-5bf51e89fc2b"],
 Cell[3692, 79, 1456, 26, 297, "Text",ExpressionUUID->"a006e748-31ff-4eb6-b7ce-fca060487ba8"],
+Cell[5151, 107, 6564, 184, 408, "Text",ExpressionUUID->"da5db689-f8c7-47d8-b2d4-6516208eea92"],
 Cell[CellGroupData[{
-Cell[5173, 109, 332, 7, 160, "Chapter",ExpressionUUID->"502ac572-4179-45a6-8047-ffd205de4fe5"],
-Cell[5508, 118, 1336, 26, 172, "Text",ExpressionUUID->"bbe9f06d-c3f8-41c6-bcf8-714907c8c5fb"],
-Cell[6847, 146, 2011, 51, 258, "Text",ExpressionUUID->"9d119165-1dd9-426d-9599-508d2c7af1b7"],
-Cell[8861, 199, 7292, 201, 739, "Text",ExpressionUUID->"2d82636e-4e84-430c-8d92-f2dac7f39f6f"],
+Cell[11740, 295, 332, 7, 160, "Chapter",ExpressionUUID->"502ac572-4179-45a6-8047-ffd205de4fe5"],
+Cell[12075, 304, 1336, 26, 172, "Text",ExpressionUUID->"bbe9f06d-c3f8-41c6-bcf8-714907c8c5fb"],
+Cell[13414, 332, 2011, 51, 258, "Text",ExpressionUUID->"9d119165-1dd9-426d-9599-508d2c7af1b7"],
+Cell[15428, 385, 7292, 201, 739, "Text",ExpressionUUID->"2d82636e-4e84-430c-8d92-f2dac7f39f6f"],
 Cell[CellGroupData[{
-Cell[16178, 404, 162, 2, 63, "Subsubsection",ExpressionUUID->"d73cb3b0-593f-4cb7-9d55-c68d79e3dfe1"],
-Cell[16343, 408, 472, 9, 113, "Text",ExpressionUUID->"1545e44e-f01b-4ead-82aa-c92164bf6d85"],
-Cell[16818, 419, 972, 18, 177, "Text",ExpressionUUID->"1af86d43-db24-4e9c-82f4-8a92ccc6985a"]
+Cell[22745, 590, 162, 2, 63, "Subsubsection",ExpressionUUID->"d73cb3b0-593f-4cb7-9d55-c68d79e3dfe1"],
+Cell[22910, 594, 472, 9, 110, "Text",ExpressionUUID->"1545e44e-f01b-4ead-82aa-c92164bf6d85"],
+Cell[23385, 605, 972, 18, 172, "Text",ExpressionUUID->"1af86d43-db24-4e9c-82f4-8a92ccc6985a"]
 }, Closed]],
 Cell[CellGroupData[{
-Cell[17827, 442, 237, 5, 50, "Subsubsection",ExpressionUUID->"b14de8df-be89-4b6d-b942-b73359ce90e1"],
-Cell[18067, 449, 7169, 211, 520, "Text",ExpressionUUID->"163f74e2-07f3-4a2e-96ef-e1b00f5b9c8f"]
+Cell[24394, 628, 237, 5, 50, "Subsubsection",ExpressionUUID->"b14de8df-be89-4b6d-b942-b73359ce90e1"],
+Cell[24634, 635, 6642, 194, 520, "Text",ExpressionUUID->"163f74e2-07f3-4a2e-96ef-e1b00f5b9c8f"]
 }, Open  ]],
 Cell[CellGroupData[{
-Cell[25273, 665, 176, 3, 63, "Subsubsection",ExpressionUUID->"9d6dc7ef-bc64-4156-9f19-e296c3ea8f16"],
-Cell[25452, 670, 6941, 192, 645, "Text",ExpressionUUID->"a2b1f92c-3ecf-434c-8ea4-9ecdcd706cad"]
+Cell[31313, 834, 176, 3, 63, "Subsubsection",ExpressionUUID->"9d6dc7ef-bc64-4156-9f19-e296c3ea8f16"],
+Cell[31492, 839, 6941, 192, 645, "Text",ExpressionUUID->"a2b1f92c-3ecf-434c-8ea4-9ecdcd706cad"]
 }, Open  ]],
 Cell[CellGroupData[{
-Cell[32430, 867, 428, 11, 93, "Section",ExpressionUUID->"9410a3a4-2a13-4959-8537-5cfe6af67d29"],
-Cell[32861, 880, 8239, 219, 510, "Text",ExpressionUUID->"8a37da2e-6fd7-402c-9674-73c520689e7d"],
-Cell[41103, 1101, 1045, 27, 108, "Input",ExpressionUUID->"7ab11f54-aa9c-4684-a149-7f97c1c1fc87"],
-Cell[42151, 1130, 1071, 31, 65, "Input",ExpressionUUID->"49fcb4c3-da92-491a-893a-1f2d77d21841"],
-Cell[43225, 1163, 897, 24, 39, "Input",ExpressionUUID->"157770f8-2286-49a2-9490-a3c89ba8855a"],
-Cell[44125, 1189, 693, 21, 65, "Input",ExpressionUUID->"965c4e6f-c08e-4d86-af4d-81670133e531"],
-Cell[44821, 1212, 1263, 30, 94, "Input",ExpressionUUID->"3ab9c7c1-261f-4577-a22c-b019fbc13b44"],
-Cell[46087, 1244, 360, 9, 39, "Input",ExpressionUUID->"1713956b-1656-4069-bfd1-8a2a5b28f841"],
-Cell[46450, 1255, 944, 28, 66, "Input",ExpressionUUID->"bb05cacb-f224-4a65-98f3-5fc5d277baf9"],
+Cell[38470, 1036, 428, 11, 93, "Section",ExpressionUUID->"9410a3a4-2a13-4959-8537-5cfe6af67d29"],
+Cell[38901, 1049, 8053, 213, 510, "Text",ExpressionUUID->"8a37da2e-6fd7-402c-9674-73c520689e7d"],
+Cell[46957, 1264, 1045, 27, 108, "Input",ExpressionUUID->"7ab11f54-aa9c-4684-a149-7f97c1c1fc87"],
+Cell[48005, 1293, 1071, 31, 65, "Input",ExpressionUUID->"49fcb4c3-da92-491a-893a-1f2d77d21841"],
+Cell[49079, 1326, 897, 24, 39, "Input",ExpressionUUID->"157770f8-2286-49a2-9490-a3c89ba8855a"],
+Cell[49979, 1352, 693, 21, 65, "Input",ExpressionUUID->"965c4e6f-c08e-4d86-af4d-81670133e531"],
+Cell[50675, 1375, 1263, 30, 94, "Input",ExpressionUUID->"3ab9c7c1-261f-4577-a22c-b019fbc13b44"],
+Cell[51941, 1407, 360, 9, 39, "Input",ExpressionUUID->"1713956b-1656-4069-bfd1-8a2a5b28f841"],
+Cell[52304, 1418, 944, 28, 66, "Input",ExpressionUUID->"bb05cacb-f224-4a65-98f3-5fc5d277baf9"],
 Cell[CellGroupData[{
-Cell[47419, 1287, 404, 8, 39, "Input",ExpressionUUID->"4c65a1a8-d735-40c6-a4bf-cd34bde596cf"],
-Cell[47826, 1297, 243, 4, 63, "Output",ExpressionUUID->"8458d4e7-1558-4ede-95b8-e77c3e1ae04b"]
+Cell[53273, 1450, 404, 8, 39, "Input",ExpressionUUID->"4c65a1a8-d735-40c6-a4bf-cd34bde596cf"],
+Cell[53680, 1460, 243, 4, 63, "Output",ExpressionUUID->"8458d4e7-1558-4ede-95b8-e77c3e1ae04b"]
 }, Open  ]],
 Cell[CellGroupData[{
-Cell[48106, 1306, 407, 9, 39, "Input",ExpressionUUID->"7bb9251e-3376-49c9-80d7-907a6f4b49db"],
-Cell[48516, 1317, 261, 6, 63, "Output",ExpressionUUID->"1370e65d-ff34-4498-8207-091718cc9195"]
+Cell[53960, 1469, 407, 9, 39, "Input",ExpressionUUID->"7bb9251e-3376-49c9-80d7-907a6f4b49db"],
+Cell[54370, 1480, 261, 6, 63, "Output",ExpressionUUID->"1370e65d-ff34-4498-8207-091718cc9195"]
 }, Open  ]],
-Cell[48792, 1326, 152, 3, 39, "Input",ExpressionUUID->"db9600c2-a87a-4f17-a860-6735de916bf3"]
-}, Open  ]],
-Cell[CellGroupData[{
-Cell[48981, 1334, 236, 4, 93, "Section",ExpressionUUID->"e494b141-e148-4766-8f52-41193e1dc916"],
-Cell[49220, 1340, 2868, 76, 123, "Text",ExpressionUUID->"e188632e-187c-4983-b8d4-3aae70a6949a"],
-Cell[CellGroupData[{
-Cell[52113, 1420, 180, 3, 63, "Subsubsection",ExpressionUUID->"39c73e3d-6ac7-4dd0-8d57-58a30d24d272"],
-Cell[52296, 1425, 5444, 166, 271, "Text",ExpressionUUID->"c636324b-d3f2-4fe8-8ea3-8cce312f6e6a"]
+Cell[54646, 1489, 152, 3, 39, "Input",ExpressionUUID->"db9600c2-a87a-4f17-a860-6735de916bf3"]
 }, Open  ]],
 Cell[CellGroupData[{
-Cell[57777, 1596, 180, 3, 63, "Subsubsection",ExpressionUUID->"6dfce641-f216-4742-8404-86839e71f016"],
-Cell[57960, 1601, 6167, 176, 373, "Text",ExpressionUUID->"0386f70f-53d9-4010-a972-f6fca4dc31f3"],
+Cell[54835, 1497, 236, 4, 93, "Section",ExpressionUUID->"e494b141-e148-4766-8f52-41193e1dc916"],
+Cell[55074, 1503, 2868, 76, 123, "Text",ExpressionUUID->"e188632e-187c-4983-b8d4-3aae70a6949a"],
 Cell[CellGroupData[{
-Cell[64152, 1781, 768, 23, 39, "Input",ExpressionUUID->"1a6654f6-e430-40bc-af29-897d29cb94a6"],
-Cell[64923, 1806, 1342, 40, 67, "Output",ExpressionUUID->"3dbd2910-9600-431b-83ae-5f871a338850"]
+Cell[57967, 1583, 180, 3, 63, "Subsubsection",ExpressionUUID->"39c73e3d-6ac7-4dd0-8d57-58a30d24d272"],
+Cell[58150, 1588, 5444, 166, 271, "Text",ExpressionUUID->"c636324b-d3f2-4fe8-8ea3-8cce312f6e6a"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[63631, 1759, 180, 3, 63, "Subsubsection",ExpressionUUID->"6dfce641-f216-4742-8404-86839e71f016"],
+Cell[63814, 1764, 5919, 168, 373, "Text",ExpressionUUID->"0386f70f-53d9-4010-a972-f6fca4dc31f3"],
+Cell[CellGroupData[{
+Cell[69758, 1936, 768, 23, 39, "Input",ExpressionUUID->"1a6654f6-e430-40bc-af29-897d29cb94a6"],
+Cell[70529, 1961, 1342, 40, 67, "Output",ExpressionUUID->"3dbd2910-9600-431b-83ae-5f871a338850"]
 }, Open  ]]
 }, Open  ]]
 }, Open  ]],
 Cell[CellGroupData[{
-Cell[66326, 1853, 217, 5, 93, "Section",ExpressionUUID->"1a6bb85e-a3b8-497a-99b9-a6510d3e7610"],
-Cell[66546, 1860, 880, 16, 110, "Text",ExpressionUUID->"6c1034d2-c185-427a-845a-ff2e699ca530"],
+Cell[71932, 2008, 217, 5, 93, "Section",ExpressionUUID->"1a6bb85e-a3b8-497a-99b9-a6510d3e7610"],
+Cell[72152, 2015, 880, 16, 110, "Text",ExpressionUUID->"6c1034d2-c185-427a-845a-ff2e699ca530"],
 Cell[CellGroupData[{
-Cell[67451, 1880, 397, 8, 99, "Subsubsection",ExpressionUUID->"9137cd80-2c91-4bbf-8e7b-214f948aacee"],
-Cell[67851, 1890, 6465, 184, 542, "Text",ExpressionUUID->"14fcdef3-bb70-4a64-b970-655bab0c9b1a"]
+Cell[73057, 2035, 397, 8, 99, "Subsubsection",ExpressionUUID->"9137cd80-2c91-4bbf-8e7b-214f948aacee"],
+Cell[73457, 2045, 6465, 184, 542, "Text",ExpressionUUID->"14fcdef3-bb70-4a64-b970-655bab0c9b1a"]
 }, Open  ]],
 Cell[CellGroupData[{
-Cell[74353, 2079, 320, 7, 99, "Subsubsection",ExpressionUUID->"75eae659-5ab8-4774-a978-00867612c111"],
-Cell[74676, 2088, 4195, 98, 502, "Text",ExpressionUUID->"449ebba4-68b4-4465-85ae-af0b363407a8"],
-Cell[78874, 2188, 3524, 90, 164, "Text",ExpressionUUID->"30e93724-d4ad-4884-a678-57f0e8905f69"]
+Cell[79959, 2234, 320, 7, 99, "Subsubsection",ExpressionUUID->"75eae659-5ab8-4774-a978-00867612c111"],
+Cell[80282, 2243, 4195, 98, 502, "Text",ExpressionUUID->"449ebba4-68b4-4465-85ae-af0b363407a8"],
+Cell[84480, 2343, 3524, 90, 164, "Text",ExpressionUUID->"30e93724-d4ad-4884-a678-57f0e8905f69"]
 }, Open  ]],
 Cell[CellGroupData[{
-Cell[82435, 2283, 182, 3, 75, "Subsection",ExpressionUUID->"19b67809-122f-498c-9bc1-b22727a24624"],
-Cell[82620, 2288, 3139, 93, 168, "Text",ExpressionUUID->"aeedbc04-0a96-427a-983f-cd1b0d82f89b"],
+Cell[88041, 2438, 182, 3, 75, "Subsection",ExpressionUUID->"19b67809-122f-498c-9bc1-b22727a24624"],
+Cell[88226, 2443, 3139, 93, 168, "Text",ExpressionUUID->"aeedbc04-0a96-427a-983f-cd1b0d82f89b"],
 Cell[CellGroupData[{
-Cell[85784, 2385, 238, 4, 63, "Subsubsection",ExpressionUUID->"0b9ecceb-4dff-41d5-8d7a-af103e7f9e98"],
-Cell[86025, 2391, 4888, 124, 338, "Text",ExpressionUUID->"679d2cae-3092-4b6d-a642-e33e35ff1d8e"]
+Cell[91390, 2540, 238, 4, 63, "Subsubsection",ExpressionUUID->"0b9ecceb-4dff-41d5-8d7a-af103e7f9e98"],
+Cell[91631, 2546, 4857, 123, 338, "Text",ExpressionUUID->"679d2cae-3092-4b6d-a642-e33e35ff1d8e"]
 }, Open  ]],
 Cell[CellGroupData[{
-Cell[90950, 2520, 555, 12, 63, "Subsubsection",ExpressionUUID->"619a5269-47ac-41f6-8e94-22e93bc5d6c7"],
-Cell[91508, 2534, 3283, 84, 267, "Text",ExpressionUUID->"f44d02cd-ac85-43b9-ba7a-5dc7cc60a92d"]
+Cell[96525, 2674, 555, 12, 63, "Subsubsection",ExpressionUUID->"619a5269-47ac-41f6-8e94-22e93bc5d6c7"],
+Cell[97083, 2688, 3283, 84, 267, "Text",ExpressionUUID->"f44d02cd-ac85-43b9-ba7a-5dc7cc60a92d"]
 }, Open  ]]
 }, Open  ]],
 Cell[CellGroupData[{
-Cell[94840, 2624, 368, 9, 112, "Subsection",ExpressionUUID->"634987fd-e3d6-4fd7-884f-2e06e9075589"],
-Cell[95211, 2635, 458, 8, 79, "Text",ExpressionUUID->"cba2d235-1d85-450d-beb4-99131f17c1e1"],
+Cell[100415, 2778, 368, 9, 112, "Subsection",ExpressionUUID->"634987fd-e3d6-4fd7-884f-2e06e9075589"],
+Cell[100786, 2789, 458, 8, 79, "Text",ExpressionUUID->"cba2d235-1d85-450d-beb4-99131f17c1e1"],
 Cell[CellGroupData[{
-Cell[95694, 2647, 275, 4, 63, "Subsubsection",ExpressionUUID->"86c1d177-40c7-44fa-8487-296a5bd4a6d3"],
-Cell[95972, 2653, 481, 9, 79, "Text",ExpressionUUID->"12e8b4ae-af9a-47bc-9080-829ed10a9a84"]
+Cell[101269, 2801, 275, 4, 63, "Subsubsection",ExpressionUUID->"86c1d177-40c7-44fa-8487-296a5bd4a6d3"],
+Cell[101547, 2807, 481, 9, 79, "Text",ExpressionUUID->"12e8b4ae-af9a-47bc-9080-829ed10a9a84"]
 }, Open  ]],
 Cell[CellGroupData[{
-Cell[96490, 2667, 177, 3, 63, "Subsubsection",ExpressionUUID->"6582c419-bf47-49c7-9a67-753cf3519e41"],
-Cell[96670, 2672, 9237, 242, 832, "Text",ExpressionUUID->"bc81a6b4-03f9-4375-9d1a-9b876621c929"],
-Cell[105910, 2916, 8675, 249, 740, "Text",ExpressionUUID->"bd612c75-75fe-4cc0-bdaa-c76858bb9728"],
-Cell[114588, 3167, 444, 9, 39, "Input",ExpressionUUID->"afe4a451-8e8f-4fc1-9c30-1c1bca963c7c"],
-Cell[115035, 3178, 1314, 37, 82, "Input",ExpressionUUID->"0518f4be-fbd3-4b1e-97e8-28e430950878"],
+Cell[102065, 2821, 177, 3, 63, "Subsubsection",ExpressionUUID->"6582c419-bf47-49c7-9a67-753cf3519e41"],
+Cell[102245, 2826, 9237, 242, 832, "Text",ExpressionUUID->"bc81a6b4-03f9-4375-9d1a-9b876621c929"],
+Cell[111485, 3070, 8675, 249, 771, "Text",ExpressionUUID->"bd612c75-75fe-4cc0-bdaa-c76858bb9728"],
+Cell[120163, 3321, 444, 9, 39, "Input",ExpressionUUID->"afe4a451-8e8f-4fc1-9c30-1c1bca963c7c"],
+Cell[120610, 3332, 1314, 37, 82, "Input",ExpressionUUID->"0518f4be-fbd3-4b1e-97e8-28e430950878"],
 Cell[CellGroupData[{
-Cell[116374, 3219, 261, 6, 39, "Input",ExpressionUUID->"328adada-8a05-4350-9a1a-a0c5331fed41"],
-Cell[116638, 3227, 252, 6, 45, "Output",ExpressionUUID->"5f4ed0f2-57e1-4874-8766-23a1503c8939"]
+Cell[121949, 3373, 261, 6, 39, "Input",ExpressionUUID->"328adada-8a05-4350-9a1a-a0c5331fed41"],
+Cell[122213, 3381, 252, 6, 45, "Output",ExpressionUUID->"5f4ed0f2-57e1-4874-8766-23a1503c8939"]
 }, Open  ]],
-Cell[116905, 3236, 251, 5, 39, "Input",ExpressionUUID->"2cfcc38d-d163-461b-a407-e3f9cc3114b1"],
-Cell[117159, 3243, 152, 3, 39, "Input",ExpressionUUID->"8f87be04-4fd0-4855-a2ff-4a9c344e37c6"]
+Cell[122480, 3390, 251, 5, 39, "Input",ExpressionUUID->"2cfcc38d-d163-461b-a407-e3f9cc3114b1"],
+Cell[122734, 3397, 152, 3, 39, "Input",ExpressionUUID->"8f87be04-4fd0-4855-a2ff-4a9c344e37c6"]
 }, Open  ]],
 Cell[CellGroupData[{
-Cell[117348, 3251, 173, 3, 63, "Subsubsection",ExpressionUUID->"3596b9f5-daf2-4807-979b-06d1b8488405"],
-Cell[117524, 3256, 4251, 123, 451, "Text",ExpressionUUID->"7c197c16-77ef-43db-ba64-d34b904af14d"]
+Cell[122923, 3405, 173, 3, 63, "Subsubsection",ExpressionUUID->"3596b9f5-daf2-4807-979b-06d1b8488405"],
+Cell[123099, 3410, 4251, 123, 451, "Text",ExpressionUUID->"7c197c16-77ef-43db-ba64-d34b904af14d"]
 }, Open  ]]
-}, Open  ]]
-}, Open  ]]
-}, Open  ]],
-Cell[CellGroupData[{
-Cell[121848, 3387, 451, 11, 95, "Chapter",ExpressionUUID->"1be03235-5c56-4720-a6c0-d90defe2a342"],
-Cell[122302, 3400, 3262, 82, 141, "Text",ExpressionUUID->"b74e8a98-fbec-49d7-b4f4-0a8670332df4"],
-Cell[125567, 3484, 637, 14, 79, "Text",ExpressionUUID->"42841424-d2c6-47f4-a159-be0b39474e62"],
-Cell[126207, 3500, 2348, 43, 267, "Text",ExpressionUUID->"3eaad458-bdf0-4ca4-a664-fff0eb984ffa"],
-Cell[CellGroupData[{
-Cell[128580, 3547, 204, 3, 93, "Section",ExpressionUUID->"5dd444c0-37be-4cf9-a037-8d1aec134f22"],
-Cell[128787, 3552, 4412, 86, 640, "Text",ExpressionUUID->"64290bbb-d8b7-4dee-9eb1-8151d3898ea0"],
-Cell[CellGroupData[{
-Cell[133224, 3642, 204, 3, 63, "Subsubsection",ExpressionUUID->"9c08d387-f583-4dc2-970f-bbdd948c013a"],
-Cell[133431, 3647, 11263, 352, 592, "Text",ExpressionUUID->"ebdfd726-b28e-4ffb-b120-aeb19c32009e"]
-}, Open  ]],
-Cell[CellGroupData[{
-Cell[144731, 4004, 178, 3, 63, "Subsubsection",ExpressionUUID->"6a33470c-bf48-46c2-9fef-ddc95646d95a"],
-Cell[144912, 4009, 17354, 489, 697, "Text",ExpressionUUID->"f9aaf946-8ed0-45d5-9bdb-1c50efd447dd"]
-}, Open  ]],
-Cell[CellGroupData[{
-Cell[162303, 4503, 213, 3, 63, "Subsubsection",ExpressionUUID->"daaf6f84-4e28-4247-aebd-53e5f44353fb"],
-Cell[162519, 4508, 991, 26, 113, "Text",ExpressionUUID->"e615844e-fbb7-403b-aa7c-f697952fc066"]
-}, Open  ]],
-Cell[CellGroupData[{
-Cell[163547, 4539, 364, 11, 63, "Subsubsection",ExpressionUUID->"2499ba42-b1e8-4680-ab7a-b2d6c479f125"],
-Cell[163914, 4552, 2992, 74, 255, "Text",ExpressionUUID->"507e9054-d9c6-4e3e-92d2-a91dcb3acb8b"],
-Cell[166909, 4628, 3332, 104, 136, "Text",ExpressionUUID->"5e546f93-b145-446f-9ccc-e5d6976e86e2"]
 }, Open  ]]
 }, Open  ]]
 }, Open  ]],
 Cell[CellGroupData[{
-Cell[170302, 4739, 214, 4, 96, "Chapter",ExpressionUUID->"9d52be41-29f5-4e5e-9d99-db2a8bfd7ec8"],
-Cell[170519, 4745, 321, 7, 49, "Text",ExpressionUUID->"dc94894b-ad39-45ba-84e5-07bfaf299252"],
+Cell[127423, 3541, 451, 11, 95, "Chapter",ExpressionUUID->"1be03235-5c56-4720-a6c0-d90defe2a342"],
+Cell[127877, 3554, 3262, 82, 141, "Text",ExpressionUUID->"b74e8a98-fbec-49d7-b4f4-0a8670332df4"],
+Cell[131142, 3638, 606, 13, 79, "Text",ExpressionUUID->"42841424-d2c6-47f4-a159-be0b39474e62"],
+Cell[131751, 3653, 2348, 43, 267, "Text",ExpressionUUID->"3eaad458-bdf0-4ca4-a664-fff0eb984ffa"],
 Cell[CellGroupData[{
-Cell[170865, 4756, 170, 3, 93, "Section",ExpressionUUID->"47fe2c84-e688-41a6-af74-0fa8492b4fa4"],
-Cell[171038, 4761, 1132, 23, 113, "Text",ExpressionUUID->"42713337-ca24-4e55-b2e5-2646b4a9c314"]
+Cell[134124, 3700, 204, 3, 93, "Section",ExpressionUUID->"5dd444c0-37be-4cf9-a037-8d1aec134f22"],
+Cell[134331, 3705, 4412, 86, 640, "Text",ExpressionUUID->"64290bbb-d8b7-4dee-9eb1-8151d3898ea0"],
+Cell[CellGroupData[{
+Cell[138768, 3795, 204, 3, 63, "Subsubsection",ExpressionUUID->"9c08d387-f583-4dc2-970f-bbdd948c013a"],
+Cell[138975, 3800, 11275, 350, 562, "Text",ExpressionUUID->"ebdfd726-b28e-4ffb-b120-aeb19c32009e"]
 }, Open  ]],
 Cell[CellGroupData[{
-Cell[172207, 4789, 214, 4, 93, "Section",ExpressionUUID->"d2c322ca-db77-441d-8703-fe74e6457d16"],
-Cell[172424, 4795, 4917, 144, 567, "Text",ExpressionUUID->"99dafc6f-9049-4a50-8c34-0a5639d666e3"],
-Cell[177344, 4941, 2938, 85, 220, "Text",ExpressionUUID->"4e9a6240-70cb-4ed7-a62f-10d669838653"]
+Cell[150287, 4155, 178, 3, 63, "Subsubsection",ExpressionUUID->"6a33470c-bf48-46c2-9fef-ddc95646d95a"],
+Cell[150468, 4160, 17354, 489, 700, "Text",ExpressionUUID->"f9aaf946-8ed0-45d5-9bdb-1c50efd447dd"]
 }, Open  ]],
 Cell[CellGroupData[{
-Cell[180319, 5031, 157, 3, 93, "Section",ExpressionUUID->"e0b15fc6-e298-467a-b61f-705358e5adc8"],
-Cell[180479, 5036, 1098, 21, 210, "Text",ExpressionUUID->"348913e9-2695-43b4-8930-2049e5be48ef"],
-Cell[181580, 5059, 5680, 126, 580, "Text",ExpressionUUID->"22ec165f-1911-40ff-bd09-ed4a3fdb3e84"]
+Cell[167859, 4654, 213, 3, 63, "Subsubsection",ExpressionUUID->"daaf6f84-4e28-4247-aebd-53e5f44353fb"],
+Cell[168075, 4659, 991, 26, 141, "Text",ExpressionUUID->"e615844e-fbb7-403b-aa7c-f697952fc066"]
 }, Open  ]],
 Cell[CellGroupData[{
-Cell[187297, 5190, 156, 3, 93, "Section",ExpressionUUID->"43812931-3bb1-41f5-bfd8-f402fb9697f5"],
-Cell[187456, 5195, 2172, 44, 409, "Text",ExpressionUUID->"486e3269-57f7-4cf6-9dcd-74e68e7ef2bf",
+Cell[169103, 4690, 364, 11, 63, "Subsubsection",ExpressionUUID->"2499ba42-b1e8-4680-ab7a-b2d6c479f125"],
+Cell[169470, 4703, 2992, 74, 306, "Text",ExpressionUUID->"507e9054-d9c6-4e3e-92d2-a91dcb3acb8b"],
+Cell[172465, 4779, 3332, 104, 128, "Text",ExpressionUUID->"5e546f93-b145-446f-9ccc-e5d6976e86e2"]
+}, Open  ]]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[175858, 4890, 214, 4, 95, "Chapter",ExpressionUUID->"9d52be41-29f5-4e5e-9d99-db2a8bfd7ec8"],
+Cell[176075, 4896, 321, 7, 48, "Text",ExpressionUUID->"dc94894b-ad39-45ba-84e5-07bfaf299252"],
+Cell[CellGroupData[{
+Cell[176421, 4907, 170, 3, 93, "Section",ExpressionUUID->"47fe2c84-e688-41a6-af74-0fa8492b4fa4"],
+Cell[176594, 4912, 1132, 23, 141, "Text",ExpressionUUID->"42713337-ca24-4e55-b2e5-2646b4a9c314"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[177763, 4940, 214, 4, 93, "Section",ExpressionUUID->"d2c322ca-db77-441d-8703-fe74e6457d16"],
+Cell[177980, 4946, 4917, 144, 566, "Text",ExpressionUUID->"99dafc6f-9049-4a50-8c34-0a5639d666e3"],
+Cell[182900, 5092, 2938, 85, 215, "Text",ExpressionUUID->"4e9a6240-70cb-4ed7-a62f-10d669838653"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[185875, 5182, 157, 3, 93, "Section",ExpressionUUID->"e0b15fc6-e298-467a-b61f-705358e5adc8"],
+Cell[186035, 5187, 1098, 21, 297, "Text",ExpressionUUID->"348913e9-2695-43b4-8930-2049e5be48ef"],
+Cell[187136, 5210, 5680, 126, 809, "Text",ExpressionUUID->"22ec165f-1911-40ff-bd09-ed4a3fdb3e84"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[192853, 5341, 156, 3, 93, "Section",ExpressionUUID->"43812931-3bb1-41f5-bfd8-f402fb9697f5"],
+Cell[193012, 5346, 2172, 44, 369, "Text",ExpressionUUID->"486e3269-57f7-4cf6-9dcd-74e68e7ef2bf",
  InitializationCell->True]
 }, Open  ]],
 Cell[CellGroupData[{
-Cell[189665, 5244, 177, 3, 93, "Section",ExpressionUUID->"3c141950-6b85-4625-88f4-64037e74c3b1"],
-Cell[189845, 5249, 1493, 32, 693, "Text",ExpressionUUID->"029cbd4a-4e26-4e5a-890e-736124551d63"],
-Cell[191341, 5283, 478, 9, 113, "Text",ExpressionUUID->"85880579-8cfa-48dd-ade9-227ac3635427"]
+Cell[195221, 5395, 177, 3, 93, "Section",ExpressionUUID->"3c141950-6b85-4625-88f4-64037e74c3b1"],
+Cell[195401, 5400, 1493, 32, 672, "Text",ExpressionUUID->"029cbd4a-4e26-4e5a-890e-736124551d63"],
+Cell[196897, 5434, 478, 9, 79, "Text",ExpressionUUID->"85880579-8cfa-48dd-ade9-227ac3635427"]
 }, Open  ]]
 }, Open  ]]
 }, Open  ]]
