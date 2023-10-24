@@ -36,9 +36,13 @@ sqrt2 =pow(2,1/2)
 pi2r = np.sqrt(2 * np.pi)
 pidiv2r = np.sqrt(np.pi/2)
 
+## an array of 2Ns values spanning a useful range,  used for numerically integrating over the density of 2Ns, assumes max is 1.0 
 g_xvals = np.concatenate([np.array([-1000,-500,-200,-100,-50,-40,-30,-20]),np.linspace(-19,-1.1,50),np.linspace(-1,0.99999,40)])
 
 def reset_g_xvals(gdensitymax):
+    """
+        reset g_xvals for a new max value
+    """
     global g_xvals
     g_xvals = np.concatenate([np.array([-1000,-500,-200,-100,-50,-40,-30,-20]),np.linspace(-19,-1.1,50),np.linspace(-1,gdensitymax - 1e-5,40)])
 
@@ -51,7 +55,8 @@ def coth(x):
 
 def logprobratio(alpha,beta,z):
     """
-        returns the probability of a ratio z of two normal densities when for each normal density the variance equals the mean 
+        returns the log of the probability of a ratio z of two normal densities when for each normal density the variance equals the mean 
+        is called from other functions,  where alpha, beta and the ratio z have been calculated for a particular frequency bin
 
         two versions 
         Kuethe DO, Caprihan A, Gach HM, Lowe IJ, Fukushima E. 2000. Imaging obstructed ventilation with NMR using inert fluorinated gases. Journal of applied physiology 88:2279-2286.
@@ -134,12 +139,11 @@ def logprobratio(alpha,beta,z):
 
 def NegL_SFS_Theta_Ns(p,n,dofolded,counts): 
     """
-        for fisher wright poisson random field model 
+        for fisher wright poisson random field model,  with with selection or without
         if p is a float,  then the only parameter is theta and there is no selection
-        else p is a list with theta and Ns values 
+        else p is a list (2 elements) with theta and Ns values 
         counts begins with a 0
         returns the negative of the log of the likelihood for a Fisher Wright sample 
-        calls L_SFS_Theta_Ns_bin_i()
     """
     def L_SFS_Theta_Ns_bin_i(p,i,n,dofolded,count): 
         if isinstance(p,float): # p is simply a theta value,  no g  
@@ -164,7 +168,11 @@ def NegL_SFS_Theta_Ns(p,n,dofolded,counts):
 
 def prf_selection_weight(n,i,g,dofolded):
     """
-        Poisson random field selection weight for g=2Ns for bin i 
+        Poisson random field selection weight for g=2Ns for bin i  (folded or unfolded)
+        this is the function you get when you integrate the product of two terms:
+             (1) WF term for selection    (1 - E^(-2 2 N s(1 - q)))/((1 - E^(-2 2 N s)) q(1 - q))  
+             (2) bionomial sampling formula for i copies,  given allele frequency q 
+        over the range of allele frequencies 
     """
     tempc = coth(g)
     if tempc==1:
@@ -208,7 +216,7 @@ def prfdensityfunction(g,n,i,arg1,arg2,gdm,densityof2Ns,dofolded):
 def NegL_SFS_ThetaS_Ns_density(p,gdm,n,dofolded,densityof2Ns,counts):
     """
         likelihood for fisher wright poisson random field model 
-        uses a denisty for 2Ns
+        uses a density for 2Ns
         p is an array with 2 elements, alpha and beta if gamma density, and mean and stdev if lognormal,  gdm is  the shift term 
     """
     sum = 0
@@ -230,7 +238,6 @@ def NegL_SFSRATIO_Theta_Ns(p,n,dofolded,zvals,nog):
     """
         returns the negative of the log of the likelihood for a list of ratios of selected over neutral counts 
         the selected counts are generated using a single Ns value, not a distribution
-        calls L_SFSRATIO_Theta_Ns_bin_i()
     """
     def L_SFSRATIO_Theta_Ns_bin_i(p,i,n,dofolded,z,nog):
         """
@@ -282,7 +289,7 @@ def NegL_SFSRATIO_Theta_Ns(p,n,dofolded,zvals,nog):
 
 def NegL_SFSRATIO_Theta_Ns_given_thetaN(p,n,thetaN,dofolded,zvals,nog):
     """
-        uses thetaN estimated directly from snp count 
+        uses thetaN estimated directly from snp count using watterson's estimator
         returns the negative of the log of the likelihood for a list of ratios of selected over neutral counts 
         the selected counts are generated using a single Ns value, not a distribution
         calls L_SFSRATIO_Theta_Ns_bin_i()
@@ -455,7 +462,7 @@ def NegL_SFSRATIO_Theta_Nsdensity(p,gdm,n,dofolded,densityof2Ns,zvals):
 
 def NegL_SFSRATIO_Theta_Nsdensity_given_thetaN(p,gdm,n,thetaN,dofolded,densityof2Ns,zvals): 
     """
-    uses thetaN estimated directly from snp count 
+    uses thetaN estimated directly from snp count using watterson estimator
     """
     
     def L_SFSRATIO_Theta_Nsdensity_bin_i(p,i,gdm,n,dofolded,densityof2Ns,z): 
@@ -553,6 +560,8 @@ def NegL_SFSRATIO_Theta_Nsdensity_given_thetaN(p,gdm,n,thetaN,dofolded,densityof
 
 def simsfs_continuous_gdist(theta,gdm,n,maxi,gdist, params, returnexpected):
     """
+    simulate the SFS under selection, assuming a PRF Wright-Fisher model 
+    uses a distribution of g (2Ns) values 
     gdist is "lognormal" or "gamma" ,params is two values
        
     """
@@ -579,6 +588,8 @@ def simsfs_continuous_gdist(theta,gdm,n,maxi,gdist, params, returnexpected):
 
 def simsfs(theta,g,n,maxi, returnexpected):
     """
+        simulate the SFS under selection, assuming a PRF Wright-Fisher model 
+        uses just a single value of g (2Ns), not a distribution
         if returnexpected,  use expected values, not simulated
         generates,  folded and unfolded for Fisher Wright under Poisson Random Field
     """
@@ -606,7 +617,7 @@ def simsfs(theta,g,n,maxi, returnexpected):
 
 def simsfsratio(thetaN,thetaS,gdm,n,maxi,dofolded,gdist,params, returnexpected):
     """
-    the ratio of selected SFS to neutral SFS
+    simulate the ratio of selected SFS to neutral SFS
     if returnexpected,  use expected values, not simulated
     if gdist is None,  params is just a g value,  else it is a list of distribution parameters
     if a bin of the neutral SFS ends up 0,  the program stops
