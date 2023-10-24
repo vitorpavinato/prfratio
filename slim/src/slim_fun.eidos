@@ -27,7 +27,8 @@ function (*)fsfs(o<Subpopulation>$ subpop, o<MutationType>$ mutType, i$ sampleSi
 	vdac = si.genomes.mutationCountsInGenomes(muts);
 	
 	// Calculate the FSFS
-	fsfs = rep(0, sampleSize+1);
+	//fsfs = rep(0, sampleSize+1); // this is wrong
+	fsfs = rep(0, sampleSize);
 	for (i in seqAlong(vdac))
 	{
 	    // get the derived and ancestral allele counts
