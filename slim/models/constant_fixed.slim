@@ -2,7 +2,7 @@
 // slim -s <SEED> -d simu=<sim number> -d MU=<MU RATE> -d R=<R RATE> \
 //      -d N=<POPSIZE> -d L=<CHR LENGTH> -d Ns=<NS> -d n=<SAMPLE SIZE> \
 //      -d intronL=<INTRON LENGTH> -d exonL=<EXON LENGTH> \
-//      -d o=<OUTPUT DIR>  models/constant.slim
+//      -d o=<OUTPUT DIR>  models/constant_fixed.slim
 
 // set up a simple neutral simulation
 initialize() {
@@ -22,7 +22,8 @@ initialize() {
 	defineGlobal("exonL", 324);
 	//defineGlobal("n", 40);
 	//defineGlobal("outDir", "/Users/tur92196/WorkDir/prfratio/SLiM/results/prfratio/constant/fixed/-0.02"); // change this to a working dir when testing ouput
-	//defineGlobal("outDir", "results/prfratio/constant/fixed/-0.02"); // change this to a working dir when testing ouput	
+	//defineGlobal("outDir", "results/prfratio/constant/fixed/-0.02"); // change this to a working dir when testing ouput		
+	//defineGlobal("outDir", "/Users/tur92196/Desktop");	
 	
 	// FOR DEBUGGING
 	// Track pedigree
@@ -31,9 +32,10 @@ initialize() {
 	// Arguments are parsed from command line
 	//setSeed(seed);
 	defineGlobal("basename", paste0(simu + "_" + getSeed())); // This is for the simplified output file naming
+	
 	initializeMutationRate(MU);
-	initializeMutationType("m1", 0.5, "f", 0.0);     // neutral mutations in introns
-	initializeMutationType("m2", 0.5, "f", Ns/(2*N));    // non-neutral mutations in exons; Ns/N to get s from Ns
+	initializeMutationType("m1", 0.5, "f", 0.0);      // neutral mutations in introns
+   initializeMutationType("m2", 0.5, "f", Ns/(2*N)); // non-neutral mutations in exons; Ns/2N to get s from Ns         
 	m1.convertToSubstitution = F;
 	m2.convertToSubstitution = F;
 	
@@ -93,17 +95,14 @@ initialize() {
 s0 999999 late(){
 	m1fsfs = fsfs(p0, m1, n, F);
 	m2fsfs = fsfs(p0, m2, n, F);
-	print(m1fsfs);
-	print("\n");
-	print(m2fsfs);
-	print("\n");
-	print(Ns);
+	//print(m1fsfs);
+	//print("\n");
+	//print(m2fsfs);
+	//print("\n");
 	
 	// Save FSFSs to a file:
 	writeSFS(m1fsfs, paste0("sfs_neutral_" + basename), outDir);
 	writeSFS(m2fsfs, paste0("sfs_selected_" + basename), outDir);
-		
+	
 	sim.simulationFinished();
 }
-
-
