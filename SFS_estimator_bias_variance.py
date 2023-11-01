@@ -171,9 +171,10 @@ def run(args):
             for i in range(ntrialsperg):
                 if densityof2Ns:
                     if simuslim:
-                        sims_csfs_neutral, sfsfolded, sims_csfs_ratio, sims_nss, sims_seeds = slim.simulateSFSslim(nsimulations = 1, mu = mu, rec = rec, popSize = popSize, seqLen = seqLen, 
-                                                                                                                   nsdist = densityof2Ns, nsdistargs = g, sampleSize = int(n/2), model = model, 
-                                                                                                                   nSeqs =nSeqs, parent_dir = parent_dir, savefile = savefile)
+                        sims_csfs_neutral, sfsfolded, sims_csfs_ratio, sims_seeds = slim.simulateSFSslim(nsimulations = 1, mu = mu, rec = rec, popSize = popSize, seqLen = seqLen, 
+                                                                                                        ns = 0, nsdist = densityof2Ns, nsdistargs = g, sampleSize = int(n/2), 
+                                                                                                        model = model,nSeqs =nSeqs, parent_dir = parent_dir, savefile = savefile)
+                    
 
                     else:    
                         sfs,sfsfolded =  SFS_functions.simsfs_continuous_gdist(thetaS,gdm,n,args.maxi,densityof2Ns,(g[0],g[1]),False)  
@@ -187,9 +188,9 @@ def run(args):
                     sfsfit,sfsfoldedfit =  SFS_functions.simsfs_continuous_gdist(thetaSresults[gi][-1],gdm,n,args.maxi,densityof2Ns,(ln1results[gi][-1],ln2results[gi][-1]),True)  
                 else:
                     if simuslim:
-                        sims_csfs_neutral, sfsfolded, sims_csfs_ratio, sims_nss, sims_seeds = slim.simulateSFSslim(nsimulations = 1, mu = mu, rec = rec, popSize = popSize, seqLen = seqLen, 
-                                                                                                                   ns = g, nsdist = "fixed", sampleSize = int(n/2), model = model, 
-                                                                                                                   nSeqs = nSeqs, parent_dir = parent_dir, savefile = savefile)
+                        sims_csfs_neutral, sfsfolded, sims_csfs_ratio, sims_seeds = slim.simulateSFSslim(nsimulations = 1, mu = mu, rec = rec, popSize = popSize, seqLen = seqLen, 
+                                                                                                         ns = g, nsdist = "fixed", nsdistargs =[0.0, 0.0], sampleSize = int(n/2), model = model, 
+                                                                                                         nSeqs = nSeqs, parent_dir = parent_dir, savefile = savefile)
 
                     else:
                         sfs,sfsfolded = SFS_functions.simsfs(thetaS,g,n,args.maxi,False)
@@ -287,10 +288,9 @@ def run(args):
                 if densityof2Ns:
                     SFScompareheaders = ["Params:{} {} Trial#{}:".format(g[0],g[1],i+1),"Nsim","Ssim","Ratiosim","Nfit","Sfit","Ratiofit"]
                     if simuslim:
-                        nsfs, ssfs, ratios, sims_nss, sims_seeds = slim.simulateSFSslim(nsimulations = 1, mu = mu, rec = rec, popSize = popSize, seqLen = seqLen, 
-                                                                                        nsdist = densityof2Ns, nsdistargs = g, sampleSize = int(n/2), model = model, 
-                                                                                        nSeqs = nSeqs, parent_dir = parent_dir, savefile = savefile)
-
+                        nsfs, ssfs, ratios, sims_seeds = slim.simulateSFSslim(nsimulations = 1, mu = mu, rec = rec, popSize = popSize, seqLen = seqLen, 
+                                                                              ns = 0, nsdist = densityof2Ns, nsdistargs = g, sampleSize = int(n/2), 
+                                                                              model = model, nSeqs = nSeqs, parent_dir = parent_dir, savefile = savefile)
                     else:
                         nsfs,ssfs,ratios =  SFS_functions.simsfsratio(thetaN,thetaS,gdm,n,args.maxi,dofolded,densityof2Ns,g,False) 
                     if args.use_watterson_thetaN:
@@ -310,9 +310,9 @@ def run(args):
                 else:
                     SFScompareheaders = ["Param:{} Trial#{}:".format(g,i+1),"Nsim","Ssim","Ratiosim","Nfit","Sfit","Ratiofit"]
                     if simuslim:
-                        nsfs, ssfs, ratios, sims_nss, sims_seeds = slim.simulateSFSslim(nsimulations = 1, mu = mu, rec = rec, popSize = popSize, seqLen = seqLen, 
-                                                                                        ns = g, nsdist = "fixed", sampleSize = int(n/2), model = model, 
-                                                                                        nSeqs = nSeqs, parent_dir = parent_dir, savefile = savefile)
+                        nsfs, ssfs, ratios, sims_seeds = slim.simulateSFSslim(nsimulations = 1, mu = mu, rec = rec, popSize = popSize, seqLen = seqLen, 
+                                                                              ns = g, nsdist = "fixed", nsdistargs = [0.0, 0.0], sampleSize = int(n/2), 
+                                                                              model = model, nSeqs = nSeqs, parent_dir = parent_dir, savefile = savefile)
                         
                     else:
                         nsfs,ssfs,ratios =  SFS_functions.simsfsratio(thetaN,thetaS,gdm,n,args.maxi,dofolded,None,g,False)

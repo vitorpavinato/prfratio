@@ -1,9 +1,9 @@
 // usage: 
 // slim -s <SEED> -d simu=<sim number> -d MU=<MU RATE> -d R=<R RATE> \
-//      -d N=<POPSIZE> -d L=<CHR LENGTH> -d n=<SAMPLE SIZE> \
+//      -d N=<POPSIZE> -d L=<CHR LENGTH> -d NS=<0> -d n=<SAMPLE SIZE> \
 //      -d intronL=<INTRON LENGTH> -d exonL=<EXON LENGTH> \
-//      -d shape=<SHAPE> -d scale=<SCALE> \
-//      -d o=<OUTPUT DIR>  models/constant_gamma.slim
+//      -d param1=<PARAM1> -d param2=<PARAM2> \
+//      -d o=<OUTPUT DIR>  models/constant_lognormal.slim
 
 // set up a simple neutral simulation
 initialize() {
@@ -18,16 +18,15 @@ initialize() {
 	//defineGlobal("R", (1e-6/4));
 	//defineGlobal("N", 1000);
 	//defineGlobal("L", 10000);
+	//defineGlobal("Ns", 0);    // For this script, it is always zero
 	defineGlobal("intronL", 810); // at this point, it doesn't matter the size 
 	defineGlobal("exonL", 324);
 	//defineGlobal("n", 40);
-	//defineGlobal("outDir", "/Users/tur92196/WorkDir/prfratio/SLiM/results/prfratio/constant/fixed/-0.02"); // change this to a working dir when testing ouput
-	//defineGlobal("outDir", "results/prfratio/constant/fixed/-0.02"); // change this to a working dir when testing ouput		
 	//defineGlobal("outDir", "/Users/tur92196/Desktop");	
 	
-	// VALUES FOR GAMMA 2Ns DISTRIBUTION
-	//defineGlobal("shape", 2.5);
-	//defineGlobal("scale", 3.0);	
+	// PARAMETERS FOR THE 2NS GAMMA DISTRIBUTION
+	//defineGlobal("param1", 2.5);  //shape
+	//defineGlobal("param2", 3.0);  //scale
 	
 	// FOR DEBUGGING
 	// Track pedigree
@@ -40,9 +39,8 @@ initialize() {
 	initializeMutationRate(MU);
 	// neutral mutations
 	initializeMutationType("m1", 0.5, "f", 0.0);  
-	
 	// initialized non-neutral mutation as neutral; SelectionCoeff are modified by a mutation() callback         
-   initializeMutationType("m2", 0.5, "f", 0.0);           
+   initializeMutationType("m2", 0.5, "f", Ns/(2*N)); // selCoeff is zero, it doesn't make sense this calculation, but it keeps consistency across model's script           
 	
 	m1.convertToSubstitution = F;
 	m2.convertToSubstitution = F;
@@ -96,7 +94,6 @@ initialize() {
 	
 	// schedule SAMPLING BLOCK
 	community.rescheduleScriptBlock(s0, start=10*N, end=10*N);
-
 }
 
 // MUTATION CALLBACK VERSION OF SELCOEFF 
@@ -104,11 +101,11 @@ initialize() {
 // It has a cap on Ns >= -1000.0
 // It then re-scale 2Ns to s by dividing by 2N
 mutation(m2) {
-	sel_muts = mut.selectionCoeff;
-	for (i in 0:(size(sel_muts)-1))
+	muts_selCoeffs = mut.selectionCoeff;
+	for (i in 0:(size(muts_selCoeffs)-1))
 		// FOR GAMMA
-		sel_muts[i] = max(-1001.0, 1 - rgamma(1, (shape*scale), shape))/(2*N);		
-	mut.setSelectionCoeff(sel_muts);
+		muts_selCoeffs[i] = max(-1001.0, 1 - rgamma(1, (param1*param2), param1))/(2*p0.individualCount); //I hope to fix the s calculation with population size changes
+	mut.setSelectionCoeff(muts_selCoeffs);
 	return T;
 }
 
