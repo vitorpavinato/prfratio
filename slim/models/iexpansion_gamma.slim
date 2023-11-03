@@ -2,7 +2,9 @@
 // slim -s <SEED> -d simu=<sim number> -d MU=<MU RATE> -d R=<R RATE> \
 //      -d N=<POPSIZE> -d L=<CHR LENGTH> -d Ns=<NS> -d n=<SAMPLE SIZE> \
 //      -d intronL=<INTRON LENGTH> -d exonL=<EXON LENGTH> \
-//      -d o=<OUTPUT DIR>  models/ibottleneck.slim
+//		  -d param1=<0> -d param2=<0> \
+//		  -d PSCi=<POPULATION SIZE CHANGE (i)NTENSITY> \
+//      -d o=<OUTPUT DIR>  models/iexpansion_gamma.slim
 
 // set up a simple neutral simulation
 initialize() {
@@ -17,13 +19,16 @@ initialize() {
 	//defineGlobal("R", (1e-6/4));
 	//defineGlobal("N", 1000);
 	//defineGlobal("L", 10000);
-	//defineGlobal("Ns", -0.02);
+	//defineGlobal("Ns", 0);
 	defineGlobal("intronL", 810); // at this point, it doesn't matter the size 
 	defineGlobal("exonL", 324);
 	//defineGlobal("n", 40);
-	//defineGlobal("outDir", "/Users/tur92196/WorkDir/prfratio/SLiM/results/prfratio/ibottleneck/fixed/-0.02"); // change this to a working dir when testing ouput
-	//defineGlobal("outDir", "results/prfratio/ibottleneck/fixed/-0.02"); // change this to a working dir when testing ouput	
-	defineGlobal("Nb", asInteger(N/10));
+	defineGlobal("PSCi", 0.10); // This defines the population size change intensity (devide N for expansion)
+	//defineGlobal("outDir", "/Users/tur92196/Desktop");	
+	
+	// PARAMETERS FOR THE 2NS (NOT IN USE IN THE FIXED 2NS MODEL)
+	//defineGlobal("param1", 2.5);
+	//defineGlobal("param2", 3.0);
 	
 	// FOR DEBUGGING
 	// Track pedigree
@@ -32,9 +37,13 @@ initialize() {
 	// Arguments are parsed from command line
 	//setSeed(seed);
 	defineGlobal("basename", paste0(simu + "_" + getSeed())); // This is for the simplified output file naming
+	
 	initializeMutationRate(MU);
-	initializeMutationType("m1", 0.5, "f", 0.0);     // neutral mutations in introns
-	initializeMutationType("m2", 0.5, "f", Ns/(2*N));    // non-neutral mutations in exons; Ns/N to get s from Ns
+	// neutral mutations	
+	initializeMutationType("m1", 0.5, "f", 0.0);
+	// non-neutral mutations in exons starts as neutral; s are modified by mutation()  
+	initializeMutationType("m2", 0.5, "f", 0.0);
+	
 	m1.convertToSubstitution = F;
 	m2.convertToSubstitution = F;
 	
@@ -42,11 +51,12 @@ initialize() {
 	initializeGenomicElementType("g1", m1, 1);
 	initializeGenomicElementType("g2", m2, 1);
 	
+	// POPULATION SIZE AFTER EXPANSION
+	defineGlobal("Nx", asInteger(N/PSCi)); // This defines the population size after the bottleneck with intensity "PSCi"
+	
 	// Test if the sample size n is higher than the population size
-	if (n > N)
-		stop("Sample size n can't be larger than the population size N!!!");
-	else if (n > Nb)
-		stop("Sample size n can't be larger than the population size after the bottleneck Nb!!!");
+	if (n > Nx)
+       stop("Sample size n can't be larger than the population size after the expansion!!!");	
 	
 	//	Generates intron/exons pairs programatically
 	base=0;
@@ -94,34 +104,37 @@ initialize() {
 	
 	// schedule SAMPLING BLOCK
 	//community.rescheduleScriptBlock(s0, start=10*N+1, end=10*N+1);
-	//community.rescheduleScriptBlock(s1, start=10*N+Nb, end=10*N+Nb);
+	//community.rescheduleScriptBlock(s1, start=10*N+N, end=10*N+N);
 
+}
+
+// MUTATION CALLBACK VERSION OF SELCOEFF 
+// RE-SCALE NEW MUTATIONS 2Ns TO s BY DIVIDING BY 2*`POPULATION SIZE`
+// IT NEEDS TO START SIMULATION WITH M2 MUTATIONS WITH FITNESS ZERO
+// REMEMBER, MUTATAION() MODIFIES ONLY NEW MUTATIONS SELCOEFF
+mutation(m2) {
+   muts_selCoeffs = max(-1001.0, 1 - rgamma(1, (param1*param2), param1))/(2*p0.individualCount);
+	mut.setSelectionCoeff(muts_selCoeffs);
+   return T;
 }
 
 // DEMOGRAPHY BLOCK
+// Instantaneous population size change - Expansion
+// Expansion intensity N/PSCi
 //s0 999999 early(){
-10000  early(){
-	// Instantaneous population size change - Bottleneck
-	// Bottleneck intensity N/10
-	p0.setSubpopulationSize(Nb);
-
-}
-10001:10100 early(){
-	// THIS FORCES ALL NEW MUTATIONS TO HAVE THE s = Ns/Nb
-	sel_muts = sim.mutationsOfType(m2);
-	sel_muts.setSelectionCoeff(Ns/(2*Nb));
+10000  early(){	
+	p0.setSubpopulationSize(Nx);
 }
 
 // SAMPLING BLOCK
 //s1 999999 late(){
-10100 early(){
+11000 early(){
 	m1fsfs = fsfs(p0, m1, n, F);
 	m2fsfs = fsfs(p0, m2, n, F);
-	print(m1fsfs);
-	print("\n");
-	print(m2fsfs);
-	print("\n");
-	print(Ns);
+	//print(m1fsfs);
+	//print("\n");
+	//print(m2fsfs);
+	//print("\n");
 	
 	// Save FSFSs to a file:
 	writeSFS(m1fsfs, paste0("sfs_neutral_" + basename), outDir);

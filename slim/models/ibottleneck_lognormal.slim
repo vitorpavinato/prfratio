@@ -3,7 +3,8 @@
 //      -d N=<POPSIZE> -d L=<CHR LENGTH> -d Ns=<NS> -d n=<SAMPLE SIZE> \
 //      -d intronL=<INTRON LENGTH> -d exonL=<EXON LENGTH> \
 //		  -d param1=<0> -d param2=<0> \
-//      -d o=<OUTPUT DIR>  models/constant_fixed.slim
+//		  -d PSCi=<POPULATION SIZE CHANGE (i)NTENSITY> \
+//      -d o=<OUTPUT DIR>  models/ibottleneck_lognormal.slim
 
 // set up a simple neutral simulation
 initialize() {
@@ -18,19 +19,20 @@ initialize() {
 	//defineGlobal("R", (1e-6/4));
 	//defineGlobal("N", 1000);
 	//defineGlobal("L", 10000);
-	//defineGlobal("Ns", -0.02);
+	//defineGlobal("Ns", 0);
 	defineGlobal("intronL", 810); // at this point, it doesn't matter the size 
 	defineGlobal("exonL", 324);
 	//defineGlobal("n", 40);
+	defineGlobal("PSCi", 0.10); // This defines the population size change intensity (multiplicate N for bottlenecks)
 	//defineGlobal("outDir", "/Users/tur92196/Desktop");	
 	
 	// PARAMETERS FOR THE 2NS (NOT IN USE IN THE FIXED 2NS MODEL)
-	//defineGlobal("param1", 0.0);
-	//defineGlobal("param2", 0.0);
+	//defineGlobal("param1", 1.0);
+	//defineGlobal("param2", 1.0);
 	
 	// FOR DEBUGGING
 	// Track pedigree
-	//initializeSLiMOptions(keepPedigrees=T);
+	//initializeSLiMOptions(keepPedigrees=T);	
 	
 	// Arguments are parsed from command line
 	//setSeed(seed);
@@ -38,15 +40,25 @@ initialize() {
 	
 	initializeMutationRate(MU);
 	// neutral mutations	
-	initializeMutationType("m1", 0.5, "f", 0.0);      
-	// non-neutral mutations in exons; Ns/2N to get s from Ns   
-   initializeMutationType("m2", 0.5, "f", Ns/(2*N));          
+	initializeMutationType("m1", 0.5, "f", 0.0);
+	// non-neutral mutations in exons starts as neutral; s are modified by mutation()  
+	initializeMutationType("m2", 0.5, "f", 0.0);
 	
 	m1.convertToSubstitution = F;
 	m2.convertToSubstitution = F;
 	
+	// Initialize genome elements
 	initializeGenomicElementType("g1", m1, 1);
 	initializeGenomicElementType("g2", m2, 1);
+	
+	// POPULATION SIZE AFTER BOTTLENECK
+	defineGlobal("Nb", asInteger(N*PSCi)); // This defines the population size after the bottleneck with intensity "PSCi"
+	
+	// Test if the sample size n is higher than the population size
+	if (n > N)
+		stop("Sample size n can't be larger than the population size N!!!");
+	else if (n > Nb)
+		stop("Sample size n can't be larger than the population size after the bottleneck!!!");
 	
 	//	Generates intron/exons pairs programatically
 	base=0;
@@ -80,7 +92,7 @@ initialize() {
 1 late() {
 	sim.addSubpop("p0", N);
 	
-	// DEBUGGING ONLY
+	// DEBUGGING ONLY	
 	//p0.setValue("previous_N", p0.individualCount);
 	//
 	// Create a log file to track changes in population size for debugging only
@@ -93,11 +105,32 @@ initialize() {
 	//log.addCustomColumn("Ne_inbreeding2", "trackSel_NeInbreeding(p0);");
 	
 	// schedule SAMPLING BLOCK
-	community.rescheduleScriptBlock(s0, start=10*N, end=10*N);
+	//community.rescheduleScriptBlock(s0, start=10*N+1, end=10*N+1);
+	//community.rescheduleScriptBlock(s1, start=10*N+Nb, end=10*N+Nb); //Maybe here makes longer given the intensity of bottleneck
+
+}
+
+// MUTATION CALLBACK VERSION OF SELCOEFF 
+// RE-SCALE NEW MUTATIONS 2Ns TO s BY DIVIDING BY 2*`POPULATION SIZE`
+// IT NEEDS TO START SIMULATION WITH M2 MUTATIONS WITH FITNESS ZERO
+// REMEMBER, MUTATAION() MODIFIES ONLY NEW MUTATIONS SELCOEFF
+mutation(m2) {  
+   muts_selCoeffs = max(-1001.0, 1 - rlnorm(1, param1, param2))/(2*p0.individualCount);
+	mut.setSelectionCoeff(muts_selCoeffs);
+	return T;
+}
+
+// DEMOGRAPHY BLOCK
+// Instantaneous population size change - Bottleneck
+// Bottleneck intensity N*PSCi
+//s0 999999 early(){
+10000  early(){	
+	p0.setSubpopulationSize(Nb);
 }
 
 // SAMPLING BLOCK
-s0 999999 late(){
+//s1 999999 late(){
+10100 early(){
 	m1fsfs = fsfs(p0, m1, n, F);
 	m2fsfs = fsfs(p0, m2, n, F);
 	//print(m1fsfs);
