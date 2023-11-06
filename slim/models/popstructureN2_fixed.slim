@@ -1,0 +1,166 @@
+// usage: 
+// slim -s <SEED> -d simu=<sim number> -d MU=<MU RATE> -d R=<R RATE> \
+//      -d N=<POPSIZE> -d L=<CHR LENGTH> -d Ns=<NS> -d n=<SAMPLE SIZE> \
+//      -d intronL=<INTRON LENGTH> -d exonL=<EXON LENGTH> \
+//		  -d param1=<0> -d param2=<0> \
+//		  -d PSCi=<POPULATION SIZE CHANGE (i)NTENSITY> \
+//      -d o=<OUTPUT DIR>  models/popstructureN2_fixed.slim
+
+// set up a simple neutral simulation
+initialize() {
+	
+	// UPLOAD FUNCTIONS - THIS DOES NOT CHANGE
+	source("/Users/tur92196/WorkDir/prfratio/slim/src/slim_fun.eidos");
+	
+	// FOR DEBUGGING ONLY
+   //defineGlobal("seed", 123456);
+	//defineGlobal("simu", 1);
+	//defineGlobal("MU", (1e-6/4));
+	//defineGlobal("R", (1e-6/4));
+	//defineGlobal("N", 1000);
+	//defineGlobal("L", 10000);
+	//defineGlobal("Ns", -0.02);
+	defineGlobal("intronL", 810); // at this point, it doesn't matter the size 
+	defineGlobal("exonL", 324);
+	//defineGlobal("n", 40);
+   defineGlobal("PSCi", 0.50); // This defines the population size change intensity (multiplicate N for bottlenecks)
+	//defineGlobal("outDir", "/Users/tur92196/Desktop");
+	
+	// PARAMETERS FOR THE 2NS (NOT IN USE IN THE FIXED 2NS MODEL)
+	//defineGlobal("param1", 0.0);
+	//defineGlobal("param2", 0.0);	
+   
+	// FOR DEBUGGING
+	// Track pedigree
+   //initializeSLiMOptions(keepPedigrees=T);
+	
+	// Arguments are parsed from command line
+	//setSeed(seed);
+	defineGlobal("basename", paste0(simu + "_" + getSeed())); // This is for the simplified output file naming
+	
+	initializeMutationRate(MU);
+	// neutral mutations
+	initializeMutationType("m1", 0.5, "f", 0.0);     
+	// non-neutral mutations in exons starts as neutral; s are modified by mutation()  
+	initializeMutationType("m2", 0.5, "f", 0.0);    
+
+	m1.convertToSubstitution = F;
+	m2.convertToSubstitution = F;
+	
+	// Initialize genome elements
+	initializeGenomicElementType("g1", m1, 1);
+	initializeGenomicElementType("g2", m2, 1);
+	
+	// POPULATION SIZE CHANGES AFTER THE SPLIT
+	defineGlobal("Np", asInteger(N*PSCi));	// This define the intensity of the population size changes with the split
+	
+	// Test if the sample size n is higher than the population size
+	if (n > N)
+		stop("Sample size n can't be larger than the population size N!!!");
+	else if (n > Np)
+		stop("Sample size n can't be larger than the population size after the bottleneck that follow the split!!!");
+	
+	//	Generates intron/exons pairs programatically
+	base=0;
+	while (base < L) {    
+	    
+       if ((L-1) - base < (intronL + exonL)){
+           
+           // Make one intron to fill the remaning gap  
+		     initializeGenomicElement(g1, base, (base + ((L-1) - base)));
+       
+       }	else {
+           // Make one intron & exon pair   
+		     initializeGenomicElement(g1, base, (base + intronL - 1));
+		 
+		     //exon_length = exonL;
+		     initializeGenomicElement(g2, (base + intronL), (base + intronL + exonL - 1));
+       
+       }    
+	    
+	    // Update base length
+       base = base + intronL + exonL;	
+	}// end of while
+	
+	
+	// single recombination rate	
+	initializeRecombinationRate(R);
+
+}
+
+// Create a population of size N individuals
+1 late() {
+	sim.addSubpop("p0", N);
+	
+	// DEBUGGING ONLY
+	//p0.setValue("previous_N", p0.individualCount);
+	//
+	// Create a log file to track changes in population size for debugging only
+   //log = community.createLogFile(paste0(outDir + "/" + basename + "_Ne_log.csv"), logInterval=1);
+	//log.addCycle();
+	//log.addCustomColumn("N(t-1)", "p0.getValue('previous_N');");
+	//log.addCustomColumn("N(t)", "p0.individualCount;");
+	//log.addCustomColumn("Ne_heterozygosity", "estimateNe_Heterozygosity(p0, MU);");
+	//log.addCustomColumn("Ne_inbreeding", "estimateNe_Inbreeding(p0);");
+	//log.addCustomColumn("Ne_inbreeding2", "trackSel_NeInbreeding(p0);");
+	
+	// schedule SAMPLING BLOCK
+	//community.rescheduleScriptBlock(s0, start=10*N+1, end=10*N+1);
+	//community.rescheduleScriptBlock(s1, start=10*N+2*N, end=10*N+2*N);
+
+}
+
+// MUTATION CALLBACK VERSION OF SELCOEFF 
+// RE-SCALE NEW MUTATIONS 2Ns TO s BY DIVIDING BY 2*`POPULATION SIZE`
+// IT NEEDS TO START SIMULATION WITH M2 MUTATIONS WITH FITNESS ZERO
+// REMEMBER, MUTATAION() MODIFIES ONLY NEW MUTATIONS SELCOEFF
+mutation(m2) {
+   mut.setSelectionCoeff(Ns/(2*p0.individualCount));
+   return T;
+}
+
+// POPULATION SPLIT BLOCK
+// WITH POPULATION SIZE CHANGED FOLLOWING THE SPLIT
+// DETERMINED BY PSCi: if < 1 => bottleneck, if > 1 => expansion
+//s0 999999 early(){
+10000 early(){
+    
+    // Population split at times 10N - N/2 for 2*N generations 
+    // before sampling to produce enough population structure    
+    sim.addSubpopSplit("p1", Np, p0);
+    p0.setSubpopulationSize(Np);
+}
+
+// POPULATION MERGE BLOCKS
+12000 early(){
+    
+    // set up p3 to generate itself entirely from migrants
+    sim.addSubpop("p2", N);
+    p2.setMigrationRates(c(p0,p1), c(0.5, 0.5));
+}
+
+12000 late(){
+    // remove the source subpopulations
+	 p2.setMigrationRates(c(p0, p1), c(0.0, 0.0));
+	 p0.setSubpopulationSize(0);
+	 p1.setSubpopulationSize(0);
+}
+
+// SAMPLING BLOCK
+//s1 999999 late(){
+12001 late(){
+   
+    // Take a random sample of individuals from the combined population	
+	 m1fsfs = fsfs(p2, m1, n, F);
+	 m2fsfs = fsfs(p2, m2, n, F);
+//	 print(m1fsfs);
+//	 print("\n");
+//	 print(m2fsfs);
+//	 print("\n");
+	 
+	 // Save FSFSs to a file:
+	 writeSFS(m1fsfs, paste0("sfs_neutral_" + basename), outDir);
+	 writeSFS(m2fsfs, paste0("sfs_selected_" + basename), outDir);
+	
+	 sim.simulationFinished();
+}

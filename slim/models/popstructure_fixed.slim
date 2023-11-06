@@ -2,7 +2,8 @@
 // slim -s <SEED> -d simu=<sim number> -d MU=<MU RATE> -d R=<R RATE> \
 //      -d N=<POPSIZE> -d L=<CHR LENGTH> -d Ns=<NS> -d n=<SAMPLE SIZE> \
 //      -d intronL=<INTRON LENGTH> -d exonL=<EXON LENGTH> \
-//      -d o=<OUTPUT DIR>  models/popstructure.slim
+//		  -d param1=<0> -d param2=<0> \
+//      -d o=<OUTPUT DIR>  models/popstructure_fixed.slim
 
 // set up a simple neutral simulation
 initialize() {
@@ -21,8 +22,11 @@ initialize() {
 	defineGlobal("intronL", 810); // at this point, it doesn't matter the size 
 	defineGlobal("exonL", 324);
 	//defineGlobal("n", 40);
-   //defineGlobal("outDir", "/Users/tur92196/WorkDir/prfratio/SLiM/results/prfratio/popstructure/fixed/-0.02"); // change this to a working dir when testing ouput
-	//defineGlobal("outDir", "results/prfratio/popstructure/fixed/-0.02"); // change this to a working dir when testing ouput	
+   //defineGlobal("outDir", "/Users/tur92196/Desktop");	
+	
+	// PARAMETERS FOR THE 2NS (NOT IN USE IN THE FIXED 2NS MODEL)
+	//defineGlobal("param1", 0.0);
+	//defineGlobal("param2", 0.0);
 	
 	// FOR DEBUGGING
 	// Track pedigree
@@ -31,9 +35,13 @@ initialize() {
 	// Arguments are parsed from command line
 	//setSeed(seed);
 	defineGlobal("basename", paste0(simu + "_" + getSeed())); // This is for the simplified output file naming
+	
 	initializeMutationRate(MU);
-	initializeMutationType("m1", 0.5, "f", 0.0);     // neutral mutations in introns
-	initializeMutationType("m2", 0.5, "f", Ns/(2*N));    // non-neutral mutations in exons; Ns/N to get s from Ns
+	// neutral mutations
+	initializeMutationType("m1", 0.5, "f", 0.0);
+	// non-neutral mutations in exons; Ns/N to get s from Ns     
+	initializeMutationType("m2", 0.5, "f", Ns/(2*N));    
+	
 	m1.convertToSubstitution = F;
 	m2.convertToSubstitution = F;
 	
@@ -127,12 +135,11 @@ initialize() {
     // Take a random sample of individuals from the combined population	
 	 m1fsfs = fsfs(p2, m1, n, F);
 	 m2fsfs = fsfs(p2, m2, n, F);
-	 print(m1fsfs);
-	 print("\n");
-	 print(m2fsfs);
-	 print("\n");
-	 print(Ns);
-	 
+//	 print(m1fsfs);
+//	 print("\n");
+//	 print(m2fsfs);
+//	 print("\n");
+
 	 // Save FSFSs to a file:
 	 writeSFS(m1fsfs, paste0("sfs_neutral_" + basename), outDir);
 	 writeSFS(m2fsfs, paste0("sfs_selected_" + basename), outDir);

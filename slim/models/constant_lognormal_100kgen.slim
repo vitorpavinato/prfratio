@@ -3,7 +3,7 @@
 //      -d N=<POPSIZE> -d L=<CHR LENGTH> -d NS=<0> -d n=<SAMPLE SIZE> \
 //      -d intronL=<INTRON LENGTH> -d exonL=<EXON LENGTH> \
 //      -d param1=<PARAM1> -d param2=<PARAM2> \
-//      -d o=<OUTPUT DIR>  models/constant_gamma.slim
+//      -d o=<OUTPUT DIR>  models/constant_lognormal.slim
 
 // set up a simple neutral simulation
 initialize() {
@@ -22,11 +22,11 @@ initialize() {
 	defineGlobal("intronL", 810); // at this point, it doesn't matter the size 
 	defineGlobal("exonL", 324);
 	//defineGlobal("n", 40);
-	//defineGlobal("outDir", "/Users/tur92196/Desktop/");	
+	//defineGlobal("outDir", "/Users/tur92196/Desktop/nsdist_test");	
 	
-	// PARAMETERS FOR THE 2NS GAMMA DISTRIBUTION
-	//defineGlobal("param1", 2.5);  //shape
-	//defineGlobal("param2", 3.0);  //scale
+	// PARAMETERS FOR THE 2NS LOGNORMAL DISTRIBUTION	
+	//defineGlobal("param1", 3.0);  //meanlog
+	//defineGlobal("param2", 1.2);	//sdlog
 	
 	// FOR DEBUGGING
 	// Track pedigree
@@ -41,9 +41,6 @@ initialize() {
 	initializeMutationType("m1", 0.5, "f", 0.0);  
 	// initialized non-neutral mutation as neutral; SelectionCoeff are modified by a mutation() callback         
    initializeMutationType("m2", 0.5, "f", Ns/(2*N)); // selCoeff is zero, it doesn't make sense this calculation, but it keeps consistency across model's script           
-	
-	//// SLiM built-in gamma distribution for ns
-	//initializeMutationType("m2", 0.5, "g", (param1*param2), param1);	
 	
 	m1.convertToSubstitution = F;
 	m2.convertToSubstitution = F;
@@ -96,29 +93,21 @@ initialize() {
 	//log.addCustomColumn("Ne_inbreeding2", "trackSel_NeInbreeding(p0);");
 	
 	// schedule SAMPLING BLOCK
-	community.rescheduleScriptBlock(s0, start=10*N, end=10*N);
+	//community.rescheduleScriptBlock(s0, start=10*N, end=10*N); // 10,000 gen
+	community.rescheduleScriptBlock(s0, start=100*N, end=100*N); // 100,000 gen
 }
 
 // MUTATION CALLBACK VERSION OF SELCOEFF 
 // It first draws values of 1 - 2Ns
 // It has a cap on Ns >= -1000.0
 // It then re-scale 2Ns to s by dividing by 2N
-mutation(m2) {
-		
-	muts_selCoeffs = max(-1001.0, 1 - rgamma(1, (param1*param2), param1))/(2*p0.individualCount);
+mutation(m2) {	
+	
+	muts_selCoeffs = max(-10001.0, 1 - rlnorm(1, param1, param2))/(2*p0.individualCount);
 	mut.setSelectionCoeff(muts_selCoeffs);
-	//writeFile(filePath=(outDir + "/" + "nsvalues_gamma_1.txt"), contents=paste(muts_selCoeffs), append=T);
+	//mut.setSelectionCoeff(muts_selCoeffs/(2*p0.individualCount));
+	//writeFile(filePath=(outDir + "/" + "slim_2Ns_lognorml_[3.0, 1.2].txt"), contents=paste(muts_selCoeffs), append=T);
 	return T;
-	
-	// From SLiM discussion to setup a cap on s values
-	// But using SLiM buil-in function for drawing s's
-	//s = max(-1001.0, 1 - mut.selectionCoeff)/(2*N);
-   //mut.setSelectionCoeff(s);
-   //writeFile(filePath=(outDir + "/" + "nsvalues_gamma_3.txt"), contents=paste(s), append=T);
-	//return T;
-	
-	// _2: when I simulate with a negative mean in initializeMutationType
-	// _3: when I simulate with positive mean initializedMutatioType but with mutatio I took 1-s values;
 }
 
 // SAMPLING BLOCK

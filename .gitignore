@@ -11,3 +11,7 @@ SLiM/src/run_slim.sh
 results/*
 doc
 data
+.vscode/
+SFS_estimator_bias_variance_[original_Jody].py
+slim/expected_snps/
+slim/models/olds/

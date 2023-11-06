@@ -134,13 +134,24 @@ def simulateSFSslim(nsimulations = 3, mu = 1e-6/4, rec = 1e-6/4, popSize = 1000,
                      model = "constant", nSeqs = 5, parent_dir = "results/prfratio", savefile = True):
 
     # Constant value parameters:
-    # Intron length and total intron size
     intronL = 810
-    intron_totalL = (8*intronL) + 928 # Hard-coded
-    
-    # Exon length and total exon size
     exonL = 324
-    exon_totalL = 8*exonL
+    PSCi = 0.10 # Population size changes intensity
+    
+    # Elements pairs are intron+exon
+    # If len(sum(intronL + exonL)) < seqLen
+    # the remainder will be an introns of size = seqLen - len(sum(intronL + exonL))
+    intronExonPair = intronL + exonL
+
+    # How many intron+exon pairs fits in seqLen
+    npairs = seqLen // intronExonPair
+    remainderSeqLen = seqLen % intronExonPair
+
+    # Intron total Length
+    intron_totalL = (npairs*intronL) + remainderSeqLen
+    
+    # Exon total Length and total exon size
+    exon_totalL = npairs*exonL
 
     # SFS format
     sfs_format = "folded"
@@ -164,18 +175,18 @@ def simulateSFSslim(nsimulations = 3, mu = 1e-6/4, rec = 1e-6/4, popSize = 1000,
     # Neutral theta
     thetaNeutral = (4*popSize*mu)*intron_totalL*nSeqs
     if model == "ibottleneck":
-        thetaNeutral = thetaNeutral/10
+        thetaNeutral = thetaNeutral*PSCi
     if model == "iexpansion":
-        thetaNeutral = thetaNeutral * 10
+        thetaNeutral = thetaNeutral/PSCi
     if model == "OOAgravel2011":
         thetaNeutral = thetaNeutral * 122.24
     
     # Selected theta
     thetaSelected = (4*popSize*mu)*exon_totalL*nSeqs
     if model == "ibottleneck":
-        thetaSelected = thetaSelected /10
+        thetaSelected = thetaSelected*PSCi
     if model == "iexpansion":
-        thetaSelected  = thetaSelected * 10
+        thetaSelected  = thetaSelected/PSCi
     if model == "OOAgravel2011":
         thetaSelected = thetaSelected * 122.24
 
